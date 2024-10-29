@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { handleTransaction } from '../../src';
-import { type DatabaseManagerInstance, LoggerService, CreateDatabaseManager } from '@frmscoe/frms-coe-lib';
-import { type Band, type DataCache, type RuleConfig, type RuleRequest, type RuleResult } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { type DatabaseManagerInstance, LoggerService, CreateDatabaseManager } from '@tazama-lf/frms-coe-lib';
+import { type Band, type DataCache, type RuleConfig, type RuleRequest, type RuleResult } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 
-jest.mock('@frmscoe/frms-coe-lib', () => {
-  const original = jest.requireActual('@frmscoe/frms-coe-lib');
+jest.mock('@tazama-lf/frms-coe-lib', () => {
+  const original = jest.requireActual('@tazama-lf/frms-coe-lib');
   return {
     ...original,
     aql: jest.fn(),
@@ -52,7 +52,7 @@ const databaseManagerConfig = {
 
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
 let ruleRes: RuleResult;
-const loggerService: LoggerService = new LoggerService();
+const loggerService: LoggerService = new LoggerService({ maxCPU: 1, functionName: 'rule-901Test', nodeEnv: 'test' });
 
 const ruleConfig: RuleConfig = {
   id: '901@1.0.0',
