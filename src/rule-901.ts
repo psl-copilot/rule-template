@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { aql, type DatabaseManagerInstance, type LoggerService, type ManagerConfig } from '@frmscoe/frms-coe-lib';
-import { type OutcomeResult, type RuleConfig, type RuleRequest, type RuleResult } from '@frmscoe/frms-coe-lib/lib/interfaces';
-import { unwrap } from '@frmscoe/frms-coe-lib/lib/helpers/unwrap';
+import { aql, type DatabaseManagerInstance, type LoggerService, type ManagerConfig } from '@tazama-lf/frms-coe-lib';
+import { type OutcomeResult, type RuleConfig, type RuleRequest, type RuleResult } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import { unwrap } from '@tazama-lf/frms-coe-lib/lib/helpers/unwrap';
 
 export async function handleTransaction(
   req: RuleRequest,
