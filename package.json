@@ -1,13 +1,14 @@
 {
   "name": "@tazama-lf/rule-901",
-  "version": "2.1.1-rc.0",
+  "version": "2.1.1",
   "description": "Rule 901 is to calculate the number of transactions the debtor has made over a period",
   "main": "index.ts",
   "files": [
     "lib"
   ],
   "publishConfig": {
-    "@tazama-lf:registry": "https://npm.pkg.github.com/"
+    "@tazama-lf:registry": "https://npm.pkg.github.com/",
+    "access": "public"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
@@ -32,14 +33,14 @@
   "keywords": [
     "rule-091"
   ],
-  "author": "johanfol",
+  "author": "Tazama.org",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/tazama-lf/rule-901/issues"
   },
   "homepage": "https://github.com/tazama-lf/rule-901#readme",
   "dependencies": {
-    "@tazama-lf/frms-coe-lib": "5.1.0-rc.7"
+    "@tazama-lf/frms-coe-lib": "5.1.0"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0",
