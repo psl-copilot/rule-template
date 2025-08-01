@@ -38,7 +38,7 @@ jobs:
       - name: Build Rule Packages
         run: |
           echo "Building rule packages..."
-          cd rule-executer-901 && npm install
+          cd rule-executer && npm install
           echo "Rule packages built."
 
       # Step 6: Build and Push Docker Image
