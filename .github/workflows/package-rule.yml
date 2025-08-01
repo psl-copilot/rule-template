@@ -49,9 +49,8 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          cd ..
-          cat Dockerfile
           echo "Packaging rule processors into Docker image..."
+          cd rule-executer && cat Dockerfile
           docker build -t tazamaorg/rule-901:2.2.0 .
           echo "Logging into DockerHub..."
           echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
