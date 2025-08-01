@@ -32,13 +32,15 @@ jobs:
           cd rule-executer 
           sed -i 's/${GH_TOKEN}/${{ secrets.GH_TOKEN_LIB }}/' .npmrc 
           cat .npmrc
+          cd ..
           echo "Clone completed."
 
       # Step 5: Build Rule Packages
       - name: Build Rule Packages
         run: |
           echo "Building rule packages..."
-          cd rule-executer-901 && npm install
+          cd rule-executer && npm install
+          cd ..
           echo "Rule packages built."
 
       # Step 6: Build and Push Docker Image
