@@ -27,11 +27,12 @@ jobs:
       # Step 2: Clone Rule Executer Repo and delete package-lock.json file
       - name: Clone Rule Executer Repo
         run: |
-          echo "Cloning Rule Executer repo and removing package-lock.json file..."
+          echo "Cloning Rule Executer repo"
           git clone https://github.com/tazama-lf/rule-executer -b dev
           cd rule-executer 
           sed -i 's/${GH_TOKEN}/${{ secrets.GH_TOKEN_LIB }}/' .npmrc 
           cat .npmrc
+          cd ..
           echo "Clone completed."
 
       # Step 5: Build Rule Packages
@@ -39,6 +40,7 @@ jobs:
         run: |
           echo "Building rule packages..."
           cd rule-executer && npm install
+          cd ..
           echo "Rule packages built."
 
       # Step 6: Build and Push Docker Image
@@ -48,6 +50,8 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           echo "Packaging rule processors into Docker image..."
+          cd ..
+          cat Dockerfile
           docker build -t tazamaorg/rule-901:rc .
           echo "Logging into DockerHub..."
           echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
