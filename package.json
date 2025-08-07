@@ -23,7 +23,9 @@
     "dry": "npm publish --dry-run",
     "prepare": "husky",
     "test": "jest --config=jest.config.ts --passWithNoTests --runInBand --detectOpenHandles --forceExit",
-    "test:watch": "jest --config=jest.config.ts --watch"
+    "test:watch": "jest --config=jest.config.ts --watch",
+    "test:coverage": "jest --config=jest.config.ts --coverage --passWithNoTests --runInBand --detectOpenHandles --forceExit",
+    "coverage": "npm run test:coverage && echo 'Coverage report generated in ./coverage/lcov-report/index.html'"
   },
   "repository": {
     "type": "git",
@@ -39,13 +41,15 @@
   },
   "homepage": "https://github.com/tazama-lf/rule-901#readme",
   "dependencies": {
-    "@tazama-lf/frms-coe-lib": "5.1.0-rc.7"
+    "@tazama-lf/frms-coe-lib": "6.0.0-rc.0",
+    "node-cache": "^5.1.2"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0",
     "@stylistic/eslint-plugin": "^5.2.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.15",
+    "@types/node-cache": "^4.2.5",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
     "eslint": "^9.31.0",

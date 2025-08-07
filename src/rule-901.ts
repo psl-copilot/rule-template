@@ -3,22 +3,35 @@
 import { aql, type DatabaseManagerInstance, type LoggerService, type ManagerConfig } from '@tazama-lf/frms-coe-lib';
 import type { OutcomeResult, RuleConfig, RuleRequest, RuleResult } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { unwrap } from '@tazama-lf/frms-coe-lib/lib/helpers/unwrap';
+import { TenantConfigManager } from './tenant-config-manager';
+import { ensureTenantRuleRequest } from './types';
 
 export type RuleExecutorConfig = ManagerConfig &
   Required<Pick<ManagerConfig, 'transactionHistory' | 'pseudonyms' | 'configuration' | 'localCacheConfig'>>;
 
-export async function handleTransaction(
-  req: RuleRequest,
-  determineOutcome: (value: number, ruleConfig: RuleConfig, ruleResult: RuleResult) => RuleResult,
-  ruleRes: RuleResult,
-  loggerService: LoggerService,
-  ruleConfig: RuleConfig,
-  databaseManager: DatabaseManagerInstance<RuleExecutorConfig>,
-): Promise<RuleResult> {
+/**
+ * Options for handling transactions
+ */
+export interface HandleTransactionOptions {
+  determineOutcome: (value: number, ruleConfig: RuleConfig, ruleResult: RuleResult) => RuleResult;
+  ruleRes: RuleResult;
+  loggerService: LoggerService;
+  ruleConfig: RuleConfig;
+  databaseManager: DatabaseManagerInstance<RuleExecutorConfig>;
+}
+
+/**
+ * Enhanced handleTransaction function with tenant-specific configuration support
+ */
+export async function handleTransaction(req: RuleRequest, options: HandleTransactionOptions): Promise<RuleResult> {
+  const { determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager } = options;
   const context = `Rule-${ruleConfig.id ? ruleConfig.id : '<unresolved>'} handleTransaction()`;
   const msgId = req.transaction.FIToFIPmtSts.GrpHdr.MsgId;
 
   loggerService.trace('Start - handle transaction', context, msgId);
+
+  // Ensure request has TenantId for tenant-aware processing
+  const tenantReq = ensureTenantRuleRequest(req);
 
   // Throw errors early if something we know we need is not provided - Guard Pattern
   if (!ruleConfig.config.bands?.length) {
@@ -27,7 +40,7 @@ export async function handleTransaction(
   if (!ruleConfig.config.exitConditions) throw new Error('Invalid config provided - exitConditions not provided');
   if (!ruleConfig.config.parameters) throw new Error('Invalid config provided - parameters not provided');
   if (!ruleConfig.config.parameters.maxQueryRange) throw new Error('Invalid config provided - maxQueryRange parameter not provided');
-  if (!req.DataCache.dbtrAcctId) throw new Error('Data Cache does not have required dbtrAcctId');
+  if (!tenantReq.DataCache.dbtrAcctId) throw new Error('Data Cache does not have required dbtrAcctId');
 
   // Step 1: Early exit conditions
 
@@ -35,7 +48,7 @@ export async function handleTransaction(
 
   const UnsuccessfulTransaction = ruleConfig.config.exitConditions.find((b: OutcomeResult) => b.subRuleRef === '.x00');
 
-  if (req.transaction.FIToFIPmtSts.TxInfAndSts.TxSts !== 'ACCC') {
+  if (tenantReq.transaction.FIToFIPmtSts.TxInfAndSts.TxSts !== 'ACCC') {
     if (UnsuccessfulTransaction === undefined) throw new Error('Unsuccessful transaction and no exit condition in config');
 
     return {
@@ -49,9 +62,10 @@ export async function handleTransaction(
 
   loggerService.trace('Step 2 - Query setup', context, msgId);
 
-  const currentPacs002TimeFrame = req.transaction.FIToFIPmtSts.GrpHdr.CreDtTm;
-  const debtorAccountId = `accounts/${req.DataCache.dbtrAcctId}`;
+  const currentPacs002TimeFrame = tenantReq.transaction.FIToFIPmtSts.GrpHdr.CreDtTm;
+  const debtorAccountId = `accounts/${tenantReq.DataCache.dbtrAcctId}`;
   const debtorAccIdAql = aql`${debtorAccountId}`;
+  const tenantIdAql = aql`${tenantReq.TenantId}`;
   const maxQueryRange: number = ruleConfig.config.parameters.maxQueryRange as number;
   const maxQueryRangeAql = aql` AND DATE_TIMESTAMP(${currentPacs002TimeFrame}) - DATE_TIMESTAMP(pacs002.CreDtTm) <= ${maxQueryRange}`;
 
@@ -60,6 +74,7 @@ export async function handleTransaction(
     AND pacs002.TxTp == 'pacs.002.001.12'
     ${maxQueryRangeAql}
     AND pacs002.CreDtTm <= ${currentPacs002TimeFrame}
+    AND pacs002.TenantId == ${tenantIdAql}
     COLLECT WITH COUNT INTO length
   RETURN length`;
 
@@ -89,4 +104,55 @@ export async function handleTransaction(
   loggerService.trace('End - handle transaction', context, msgId);
 
   return determineOutcome(count, ruleConfig, ruleRes);
+}
+
+/**
+ * Options for handling transactions with tenant configuration
+ */
+export interface HandleTransactionWithTenantConfigOptions {
+  determineOutcome: (value: number, ruleConfig: RuleConfig, ruleResult: RuleResult) => RuleResult;
+  ruleRes: RuleResult;
+  loggerService: LoggerService;
+  baseRuleId: string;
+  databaseManager: DatabaseManagerInstance<RuleExecutorConfig>;
+  tenantConfigManager?: TenantConfigManager;
+}
+
+/**
+ * Handles transaction processing with tenant-specific rule configuration
+ * This function retrieves tenant-specific configuration and then processes the transaction
+ */
+export async function handleTransactionWithTenantConfig(
+  req: RuleRequest,
+  options: HandleTransactionWithTenantConfigOptions,
+): Promise<RuleResult> {
+  const { determineOutcome, ruleRes, loggerService, baseRuleId, databaseManager, tenantConfigManager } = options;
+  const context = `Rule-${baseRuleId} handleTransactionWithTenantConfig()`;
+  const msgId = req.transaction.FIToFIPmtSts.GrpHdr.MsgId;
+
+  loggerService.trace('Start - handle transaction with tenant config', context, msgId);
+
+  // Ensure request has TenantId for tenant-aware processing
+  const tenantReq = ensureTenantRuleRequest(req);
+
+  // Initialize tenant config manager if not provided
+  const configManager = tenantConfigManager ?? new TenantConfigManager(databaseManager, loggerService);
+
+  // Retrieve tenant-specific rule configuration
+  const tenantRuleConfig = await configManager.getTenantRuleConfig(tenantReq.TenantId, baseRuleId);
+
+  if (!tenantRuleConfig) {
+    throw new Error(`No rule configuration found for tenant: ${tenantReq.TenantId}, rule: ${baseRuleId}`);
+  }
+
+  loggerService.trace(`Using tenant-specific config for tenant: ${tenantReq.TenantId}`, context, msgId);
+
+  // Process transaction using tenant-specific configuration
+  return await handleTransaction(req, {
+    determineOutcome,
+    ruleRes,
+    loggerService,
+    ruleConfig: tenantRuleConfig,
+    databaseManager,
+  });
 }
