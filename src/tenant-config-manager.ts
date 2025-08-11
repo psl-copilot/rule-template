@@ -14,11 +14,6 @@ export class TenantConfigManager {
   private readonly databaseManager: DatabaseManagerInstance<RuleExecutorConfig>;
   private readonly loggerService: LoggerService;
 
-  static readonly DEFAULT_CACHE_TTL = 600; // 10 minutes
-  static readonly DEFAULT_CHECK_PERIOD = 120; // 2 minutes
-  static readonly FIRST_BATCH_INDEX = 0;
-  static readonly FIRST_CONFIG_INDEX = 0;
-
   constructor(
     databaseManager: DatabaseManagerInstance<RuleExecutorConfig>,
     loggerService: LoggerService,
@@ -27,8 +22,8 @@ export class TenantConfigManager {
     this.databaseManager = databaseManager;
     this.loggerService = loggerService;
     this.cache = new NodeCache({
-      stdTTL: cacheConfig?.ttl ?? TenantConfigManager.DEFAULT_CACHE_TTL,
-      checkperiod: cacheConfig?.checkperiod ?? TenantConfigManager.DEFAULT_CHECK_PERIOD,
+      stdTTL: cacheConfig?.ttl ?? 600, // 10 minutes default
+      checkperiod: cacheConfig?.checkperiod ?? 120, // 2 minutes default
     });
   }
 
@@ -69,14 +64,12 @@ export class TenantConfigManager {
       const result = await db._configurationDb.query(queryString);
       const configs = await result.batches.all();
 
-      const FIRST_BATCH = TenantConfigManager.FIRST_BATCH_INDEX;
-      const FIRST_CONFIG = TenantConfigManager.FIRST_CONFIG_INDEX;
-      if (!configs?.length || !configs[FIRST_BATCH]?.length) {
+      if (!configs?.length || !configs[0]?.length) {
         this.loggerService.warn(`No rule configuration found for tenant: ${tenantId}, rule: ${ruleId}`, context);
         return null;
       }
 
-      const config = configs[FIRST_BATCH][FIRST_CONFIG];
+      const config = configs[0][0];
 
       // Cache the configuration
       this.cache.set(cacheKey, config);
