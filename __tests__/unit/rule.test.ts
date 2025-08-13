@@ -744,4 +744,72 @@ describe('Tenant-specific functionality', () => {
     expect(isTenantsRuleRequest(reqWithNullTenantId)).toBe(false);
     expect(isTenantsRuleRequest(reqWithUndefinedTenantId)).toBe(false);
   });
+
+  test('handleTransaction should work with legacy 6-parameter signature', async () => {
+    const mockQueryFn = jest.fn();
+    const mockBatchesAllFn = jest.fn().mockResolvedValue([[1]]);
+    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
+      batches: {
+        all: mockBatchesAllFn,
+      },
+    });
+
+    // Test legacy signature directly (6 parameters)
+    const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
+
+    expect(res).toEqual(
+      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".01","reason":"The debtor has performed one transaction to date"}'),
+    );
+  });
+
+  test('handleTransactionWithTenantConfig should work with legacy 7-parameter signature', async () => {
+    const tenantConfigManager = new TenantConfigManager(databaseManager, loggerService);
+    const mockConfigQueryFn = jest.fn();
+    const mockConfigBatchesAllFn = jest.fn().mockResolvedValue([[tenantRuleConfig]]);
+    (databaseManager._configurationDb as any).query = mockConfigQueryFn.mockResolvedValue({
+      batches: {
+        all: mockConfigBatchesAllFn,
+      },
+    });
+
+    const mockQueryFn = jest.fn();
+    const mockBatchesAllFn = jest.fn().mockResolvedValue([[1]]);
+    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
+      batches: {
+        all: mockBatchesAllFn,
+      },
+    });
+
+    // Test legacy signature directly (7 parameters)
+    const res = await handleTransactionWithTenantConfig(
+      req,
+      determineOutcome,
+      ruleRes,
+      loggerService,
+      '901@1.0.0',
+      databaseManager,
+      tenantConfigManager,
+    );
+
+    expect(res.reason).toBe('The tenant debtor has performed one transaction to date');
+  });
+
+  test('handleTransaction should handle missing rule config id', async () => {
+    const mockQueryFn = jest.fn();
+    const mockBatchesAllFn = jest.fn().mockResolvedValue([[1]]);
+    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
+      batches: {
+        all: mockBatchesAllFn,
+      },
+    });
+
+    // Create config with missing/undefined id to test the fallback
+    const configWithoutId = { ...ruleConfig, id: undefined } as any;
+
+    const res = await handleTransaction(req, createHandleTransactionOptions(determineOutcome, ruleRes, loggerService, configWithoutId, databaseManager));
+
+    expect(res).toEqual(
+      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".01","reason":"The debtor has performed one transaction to date"}'),
+    );
+  });
 });

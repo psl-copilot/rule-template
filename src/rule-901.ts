@@ -20,39 +20,71 @@ export interface HandleTransactionOptions {
   databaseManager: DatabaseManagerInstance<RuleExecutorConfig>;
 }
 
+// Legacy signature for backward compatibility
+export async function handleTransaction(
+  req: RuleRequest,
+  determineOutcome: (value: number, ruleConfig: RuleConfig, ruleResult: RuleResult) => RuleResult,
+  ruleRes: RuleResult,
+  loggerService: LoggerService,
+  ruleConfig: RuleConfig,
+  databaseManager: DatabaseManagerInstance<RuleExecutorConfig>,
+): Promise<RuleResult>;
+
+// New signature with options object
+export async function handleTransaction(req: RuleRequest, options: HandleTransactionOptions): Promise<RuleResult>;
+
 /**
  * Enhanced handleTransaction function with tenant-specific configuration support
  */
-export async function handleTransaction(req: RuleRequest, options: HandleTransactionOptions): Promise<RuleResult> {
-  const { determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager } = options;
-  const context = `Rule-${ruleConfig.id ? ruleConfig.id : '<unresolved>'} handleTransaction()`;
+export async function handleTransaction(
+  req: RuleRequest,
+  optionsOrDetermineOutcome: HandleTransactionOptions | ((value: number, ruleConfig: RuleConfig, ruleResult: RuleResult) => RuleResult),
+  ruleRes?: RuleResult,
+  loggerService?: LoggerService,
+  ruleConfig?: RuleConfig,
+  databaseManager?: DatabaseManagerInstance<RuleExecutorConfig>,
+): Promise<RuleResult> {
+  // Handle both legacy and new signatures
+  const options: HandleTransactionOptions =
+    typeof optionsOrDetermineOutcome === 'function'
+      ? {
+          determineOutcome: optionsOrDetermineOutcome,
+          ruleRes: ruleRes!,
+          loggerService: loggerService!,
+          ruleConfig: ruleConfig!,
+          databaseManager: databaseManager!,
+        }
+      : optionsOrDetermineOutcome;
+
+  const { determineOutcome, ruleRes: result, loggerService: logger, ruleConfig: config, databaseManager: dbManager } = options;
+  const context = `Rule-${config.id ? config.id : '<unresolved>'} handleTransaction()`;
   const msgId = req.transaction.FIToFIPmtSts.GrpHdr.MsgId;
 
-  loggerService.trace('Start - handle transaction', context, msgId);
+  logger.trace('Start - handle transaction', context, msgId);
 
   // Ensure request has TenantId for tenant-aware processing
   const tenantReq = ensureTenantRuleRequest(req);
 
   // Throw errors early if something we know we need is not provided - Guard Pattern
-  if (!ruleConfig.config.bands?.length) {
+  if (!config.config.bands?.length) {
     throw new Error('Invalid config provided - bands not provided or empty');
   }
-  if (!ruleConfig.config.exitConditions) throw new Error('Invalid config provided - exitConditions not provided');
-  if (!ruleConfig.config.parameters) throw new Error('Invalid config provided - parameters not provided');
-  if (!ruleConfig.config.parameters.maxQueryRange) throw new Error('Invalid config provided - maxQueryRange parameter not provided');
+  if (!config.config.exitConditions) throw new Error('Invalid config provided - exitConditions not provided');
+  if (!config.config.parameters) throw new Error('Invalid config provided - parameters not provided');
+  if (!config.config.parameters.maxQueryRange) throw new Error('Invalid config provided - maxQueryRange parameter not provided');
   if (!tenantReq.DataCache.dbtrAcctId) throw new Error('Data Cache does not have required dbtrAcctId');
 
   // Step 1: Early exit conditions
 
-  loggerService.trace('Step 1 - Early exit conditions', context, msgId);
+  logger.trace('Step 1 - Early exit conditions', context, msgId);
 
-  const UnsuccessfulTransaction = ruleConfig.config.exitConditions.find((b: OutcomeResult) => b.subRuleRef === '.x00');
+  const UnsuccessfulTransaction = config.config.exitConditions.find((b: OutcomeResult) => b.subRuleRef === '.x00');
 
   if (tenantReq.transaction.FIToFIPmtSts.TxInfAndSts.TxSts !== 'ACCC') {
     if (UnsuccessfulTransaction === undefined) throw new Error('Unsuccessful transaction and no exit condition in config');
 
     return {
-      ...ruleRes,
+      ...result,
       reason: UnsuccessfulTransaction.reason,
       subRuleRef: UnsuccessfulTransaction.subRuleRef,
     };
@@ -60,13 +92,13 @@ export async function handleTransaction(req: RuleRequest, options: HandleTransac
 
   // Step 2: Query Setup
 
-  loggerService.trace('Step 2 - Query setup', context, msgId);
+  logger.trace('Step 2 - Query setup', context, msgId);
 
   const currentPacs002TimeFrame = tenantReq.transaction.FIToFIPmtSts.GrpHdr.CreDtTm;
   const debtorAccountId = `accounts/${tenantReq.DataCache.dbtrAcctId}`;
   const debtorAccIdAql = aql`${debtorAccountId}`;
   const tenantIdAql = aql`${tenantReq.TenantId}`;
-  const maxQueryRange: number = ruleConfig.config.parameters.maxQueryRange as number;
+  const maxQueryRange: number = config.config.parameters.maxQueryRange as number;
   const maxQueryRangeAql = aql` AND DATE_TIMESTAMP(${currentPacs002TimeFrame}) - DATE_TIMESTAMP(pacs002.CreDtTm) <= ${maxQueryRange}`;
 
   const queryString = aql`FOR pacs002 IN transactionRelationship
@@ -80,13 +112,13 @@ export async function handleTransaction(req: RuleRequest, options: HandleTransac
 
   // Step 3: Query Execution
 
-  loggerService.trace('Step 3 - Query execution', context, msgId);
+  logger.trace('Step 3 - Query execution', context, msgId);
 
-  const numberOfRecentTransactions = (await (await databaseManager._pseudonymsDb.query(queryString)).batches.all()) as unknown[][];
+  const numberOfRecentTransactions = (await (await dbManager._pseudonymsDb.query(queryString)).batches.all()) as unknown[][];
 
   // Step 4: Query post-processing
 
-  loggerService.trace('Step 4 - Query post-processing', context, msgId);
+  logger.trace('Step 4 - Query post-processing', context, msgId);
 
   const count = unwrap(numberOfRecentTransactions);
 
@@ -101,9 +133,9 @@ export async function handleTransaction(req: RuleRequest, options: HandleTransac
 
   // Return control to the rule-executer for rule result calculation
 
-  loggerService.trace('End - handle transaction', context, msgId);
+  logger.trace('End - handle transaction', context, msgId);
 
-  return determineOutcome(count, ruleConfig, ruleRes);
+  return determineOutcome(count, config, result);
 }
 
 /**
@@ -118,41 +150,85 @@ export interface HandleTransactionWithTenantConfigOptions {
   tenantConfigManager?: TenantConfigManager;
 }
 
+// Legacy signature for backward compatibility
+export async function handleTransactionWithTenantConfig(
+  req: RuleRequest,
+  determineOutcome: (value: number, ruleConfig: RuleConfig, ruleResult: RuleResult) => RuleResult,
+  ruleRes: RuleResult,
+  loggerService: LoggerService,
+  baseRuleId: string,
+  databaseManager: DatabaseManagerInstance<RuleExecutorConfig>,
+  tenantConfigManager?: TenantConfigManager,
+): Promise<RuleResult>;
+
+// New signature with options object
+export async function handleTransactionWithTenantConfig(
+  req: RuleRequest,
+  options: HandleTransactionWithTenantConfigOptions,
+): Promise<RuleResult>;
+
 /**
  * Handles transaction processing with tenant-specific rule configuration
  * This function retrieves tenant-specific configuration and then processes the transaction
  */
 export async function handleTransactionWithTenantConfig(
   req: RuleRequest,
-  options: HandleTransactionWithTenantConfigOptions,
+  optionsOrDetermineOutcome:
+    | HandleTransactionWithTenantConfigOptions
+    | ((value: number, ruleConfig: RuleConfig, ruleResult: RuleResult) => RuleResult),
+  ruleRes?: RuleResult,
+  loggerService?: LoggerService,
+  baseRuleId?: string,
+  databaseManager?: DatabaseManagerInstance<RuleExecutorConfig>,
+  tenantConfigManager?: TenantConfigManager,
 ): Promise<RuleResult> {
-  const { determineOutcome, ruleRes, loggerService, baseRuleId, databaseManager, tenantConfigManager } = options;
-  const context = `Rule-${baseRuleId} handleTransactionWithTenantConfig()`;
+  // Handle both legacy and new signatures
+  const options: HandleTransactionWithTenantConfigOptions =
+    typeof optionsOrDetermineOutcome === 'function'
+      ? {
+          determineOutcome: optionsOrDetermineOutcome,
+          ruleRes: ruleRes!,
+          loggerService: loggerService!,
+          baseRuleId: baseRuleId!,
+          databaseManager: databaseManager!,
+          tenantConfigManager,
+        }
+      : optionsOrDetermineOutcome;
+
+  const {
+    determineOutcome,
+    ruleRes: result,
+    loggerService: logger,
+    baseRuleId: ruleId,
+    databaseManager: dbManager,
+    tenantConfigManager: tenantManager,
+  } = options;
+  const context = `Rule-${ruleId} handleTransactionWithTenantConfig()`;
   const msgId = req.transaction.FIToFIPmtSts.GrpHdr.MsgId;
 
-  loggerService.trace('Start - handle transaction with tenant config', context, msgId);
+  logger.trace('Start - handle transaction with tenant config', context, msgId);
 
   // Ensure request has TenantId for tenant-aware processing
   const tenantReq = ensureTenantRuleRequest(req);
 
   // Initialize tenant config manager if not provided
-  const configManager = tenantConfigManager ?? new TenantConfigManager(databaseManager, loggerService);
+  const configManager = tenantManager ?? new TenantConfigManager(dbManager, logger);
 
   // Retrieve tenant-specific rule configuration
-  const tenantRuleConfig = await configManager.getTenantRuleConfig(tenantReq.TenantId, baseRuleId);
+  const tenantRuleConfig = await configManager.getTenantRuleConfig(tenantReq.TenantId, ruleId);
 
   if (!tenantRuleConfig) {
-    throw new Error(`No rule configuration found for tenant: ${tenantReq.TenantId}, rule: ${baseRuleId}`);
+    throw new Error(`No rule configuration found for tenant: ${tenantReq.TenantId}, rule: ${ruleId}`);
   }
 
-  loggerService.trace(`Using tenant-specific config for tenant: ${tenantReq.TenantId}`, context, msgId);
+  logger.trace(`Using tenant-specific config for tenant: ${tenantReq.TenantId}`, context, msgId);
 
   // Process transaction using tenant-specific configuration
   return await handleTransaction(req, {
     determineOutcome,
-    ruleRes,
-    loggerService,
+    ruleRes: result,
+    loggerService: logger,
     ruleConfig: tenantRuleConfig,
-    databaseManager,
+    databaseManager: dbManager,
   });
 }
