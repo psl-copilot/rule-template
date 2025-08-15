@@ -26,7 +26,7 @@ const config: Config.InitialOptions = {
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   // collectCoverageFrom: ['src/**/*.{ts,js}', '!src/**/*.d.ts'],
-  collectCoverageFrom: ['src/services/logic.service.ts', 'src/classes/execute-request.ts'],
+  collectCoverageFrom: ['src/rule-901.ts'],
 
   // The directory where Jest should output its coverage files
   coverageDirectory: '<rootDir>/coverage/',
@@ -107,7 +107,7 @@ const config: Config.InitialOptions = {
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
     '^ioredis$': '<rootDir>/__tests__/__mocks__/ioredis.js',
-    '^arangojs$': '<rootDir>/__tests__/__mocks__/arango.js',
+    '^pg$': '<rootDir>/__tests__/__mocks__/postgres.js',
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
