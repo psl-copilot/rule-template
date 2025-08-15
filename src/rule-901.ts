@@ -60,11 +60,7 @@ export async function handleTransaction(
   const debtorAccountId = req.DataCache.dbtrAcctId;
   const maxQueryRange: number = ruleConfig.config.parameters.maxQueryRange as number;
 
-  const values = [
-    debtorAccountId, // e.g. 'accounts/....' if you stored Arango-style ids
-    currentPacs002TimeFrame, // e.g. '2025-08-15T10:00:00Z'
-    maxQueryRange, // e.g. 900000 for 15 minutes
-  ];
+  const values = [debtorAccountId, currentPacs002TimeFrame, maxQueryRange];
 
   const queryString = `SELECT COUNT(*)::int AS length
 FROM transaction tr
