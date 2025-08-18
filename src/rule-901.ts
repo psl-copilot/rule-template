@@ -5,14 +5,9 @@ import type { OutcomeResult, RuleConfig, RuleRequest, RuleResult } from '@tazama
 
 export type RuleExecutorConfig = ManagerConfig &
   Required<Pick<ManagerConfig, 'rawHistory' | 'eventHistory' | 'configuration' | 'localCacheConfig'>>;
-
 interface CountRow {
   length: number;
 }
-interface QueryResult<T> {
-  rows: T[];
-}
-type QueryFn<T> = (sql: string, args: unknown[]) => Promise<QueryResult<T>>;
 
 export async function handleTransaction(
   req: RuleRequest,
@@ -72,9 +67,7 @@ AND ($2::timestamptz - tr."credttm"::timestamptz) <= $3 * interval '1 millisecon
 
   loggerService.trace('Step 3 - Query execution', context, msgId);
 
-  const eventHistory = databaseManager._eventHistory as { query: QueryFn<CountRow> };
-
-  const res = await eventHistory.query(queryString, values);
+  const res = await databaseManager._eventHistory.query<CountRow>(queryString, values);
 
   const [{ length }] = res.rows;
 
@@ -90,7 +83,6 @@ AND ($2::timestamptz - tr."credttm"::timestamptz) <= $3 * interval '1 millisecon
   }
 
   // Return control to the rule-executer for rule result calculation
-
   loggerService.trace('End - handle transaction', context, msgId);
 
   return determineOutcome(length, ruleConfig, ruleRes);
