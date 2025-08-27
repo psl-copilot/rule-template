@@ -142,14 +142,18 @@ const ruleConfig: RuleConfig = {
 };
 
 beforeAll(async () => {
-  databaseManager = await CreateDatabaseManager(databaseManagerConfig);
-  ruleRes = {
-    id: '901@1.0.0',
-    cfg: '1.0.0',
-
-    subRuleRef: '.00',
-    reason: '',
-  };
+  try {
+    databaseManager = await CreateDatabaseManager(databaseManagerConfig);
+    ruleRes = {
+      id: '901@1.0.0',
+      cfg: '1.0.0',
+      subRuleRef: '.00',
+      reason: '',
+    };
+  } catch (err) {
+    console.error('Error in beforeAll:', err);
+    throw err;
+  }
 });
 
 afterAll(() => {

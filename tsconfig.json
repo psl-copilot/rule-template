@@ -16,6 +16,7 @@
     "skipLibCheck": true /* Skip type checking of declaration files. */,
     "moduleResolution": "nodenext",
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
+  ,"isolatedModules": true
   },
   "include": ["./src/**/*"],
   "exclude": [
