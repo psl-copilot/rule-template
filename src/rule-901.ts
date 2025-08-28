@@ -161,7 +161,6 @@ export async function handleTransactionWithTenantConfig(
   tenantConfigManager?: TenantConfigManager,
 ): Promise<RuleResult>;
 
-// New signature with options object
 export async function handleTransactionWithTenantConfig(
   req: RuleRequest,
   options: HandleTransactionWithTenantConfigOptions,
