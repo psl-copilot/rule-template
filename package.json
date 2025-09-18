@@ -40,9 +40,6 @@
     "url": "https://github.com/tazama-lf/rule-901/issues"
   },
   "homepage": "https://github.com/tazama-lf/rule-901#readme",
-  "dependencies": {
-    "@tazama-lf/frms-coe-lib": "^6.0.0-rc.5"
-  },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0",
     "@stylistic/eslint-plugin": "^5.2.0",
@@ -67,5 +64,8 @@
       "eslint --fix",
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "@tazama-lf/frms-coe-lib": "6.0.0-rc.6"
   }
 }
