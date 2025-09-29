@@ -114,7 +114,7 @@ beforeAll(async () => {
   ruleRes = {
     id: 'DEFAULT-901@1.0.0',
     cfg: '1.0.0',
-
+    tenantId: 'DEFAULT',
     subRuleRef: '.00',
     reason: '',
   };
@@ -157,7 +157,7 @@ describe('Happy path', () => {
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
     expect(res).toEqual(
-      JSON.parse('{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".01","reason":"The debtor has performed one transaction to date"}'),
+      JSON.parse('{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".01","reason":"The debtor has performed one transaction to date", "tenantId":"DEFAULT"}'),
     );
   });
 
@@ -176,7 +176,7 @@ describe('Happy path', () => {
 
     expect(res).toEqual(
       JSON.parse(
-        '{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date"}',
+        '{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date", "tenantId":"DEFAULT"}',
       ),
     );
   });
@@ -196,7 +196,7 @@ describe('Happy path', () => {
 
     expect(res).toEqual(
       JSON.parse(
-        '{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date"}',
+        '{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date", "tenantId":"DEFAULT"}',
       ),
     );
   });
@@ -215,7 +215,7 @@ describe('Happy path', () => {
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
     expect(res).toEqual(
-      JSON.parse('{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".03","reason":"The debtor has performed 4 or more transactions to date"}'),
+      JSON.parse('{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".03","reason":"The debtor has performed 4 or more transactions to date", "tenantId":"DEFAULT"}'),
     );
   });
 });
@@ -230,7 +230,7 @@ describe('Exit conditions', () => {
     const res = await handleTransaction(newReq, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
     expect(res).toEqual(
-      JSON.parse('{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".x00","reason":"Incoming transaction is unsuccessful"}'),
+      JSON.parse('{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".x00","reason":"Incoming transaction is unsuccessful", "tenantId":"DEFAULT"}'),
     );
   });
 });
