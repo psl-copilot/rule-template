@@ -34,29 +34,20 @@ const config: Config.InitialOptions = {
   // An array of regexp pattern strings used to skip coverage collection
   coveragePathIgnorePatterns: [
     '/node_modules/',
-    './src/interfaces',
-    './src/models',
-    './__tests__',
-    'interfaces',
-    '.module.ts',
-    '.mock.ts',
-    './src/index.ts',
-    './src/clients/arangodb.ts',
-    './src/clients/index.ts',
-    './src/clients/redisClient.ts',
-    './jest.config.ts',
+    '/lib/',
+    '/coverage/',
+    '/__tests__/',
+    '/examples/',
+    '\\.test\\.ts$',
+    '\\.spec\\.ts$',
+    '\\.d\\.ts$',
   ],
 
   // Indicates which provider should be used to instrument code for coverage
   coverageProvider: 'v8',
 
   // A list of reporter names that Jest uses when writing coverage reports
-  // coverageReporters: [
-  //   "json",
-  //   "text",
-  //   "lcov",
-  //   "clover"
-  // ],
+  coverageReporters: ['json', 'lcov', 'text', 'text-summary', 'html', 'clover'],
 
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {

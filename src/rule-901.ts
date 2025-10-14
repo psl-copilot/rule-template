@@ -24,11 +24,11 @@ export async function handleTransaction(
 
   // Throw errors early if something we know we need is not provided - Guard Pattern
   if (!ruleConfig.config.bands?.length) {
-    throw new Error('Invalid config provided - bands not provided or empty');
+    throw new Error('Invalid ruleConfig provided - bands not provided or empty');
   }
-  if (!ruleConfig.config.exitConditions) throw new Error('Invalid config provided - exitConditions not provided');
-  if (!ruleConfig.config.parameters) throw new Error('Invalid config provided - parameters not provided');
-  if (!ruleConfig.config.parameters.maxQueryRange) throw new Error('Invalid config provided - maxQueryRange parameter not provided');
+  if (!ruleConfig.config.exitConditions) throw new Error('Invalid ruleConfig provided - exitConditions not provided');
+  if (!ruleConfig.config.parameters) throw new Error('Invalid ruleConfig provided - parameters not provided');
+  if (!ruleConfig.config.parameters.maxQueryRange) throw new Error('Invalid ruleConfig provided - maxQueryRange parameter not provided');
   if (!req.DataCache.dbtrAcctId) throw new Error('Data Cache does not have required dbtrAcctId');
 
   // Step 1: Early exit conditions
@@ -38,7 +38,7 @@ export async function handleTransaction(
   const UnsuccessfulTransaction = ruleConfig.config.exitConditions.find((b: OutcomeResult) => b.subRuleRef === '.x00');
 
   if (req.transaction.FIToFIPmtSts.TxInfAndSts.TxSts !== 'ACCC') {
-    if (UnsuccessfulTransaction === undefined) throw new Error('Unsuccessful transaction and no exit condition in config');
+    if (UnsuccessfulTransaction === undefined) throw new Error('Unsuccessful transaction and no exit condition in ruleConfig');
 
     return {
       ...ruleRes,
@@ -54,14 +54,16 @@ export async function handleTransaction(
   const currentPacs002TimeFrame = req.transaction.FIToFIPmtSts.GrpHdr.CreDtTm;
   const debtorAccountId = req.DataCache.dbtrAcctId;
   const maxQueryRange: number = ruleConfig.config.parameters.maxQueryRange as number;
+  const tenantId = req.transaction.TenantId;
 
-  const values = [debtorAccountId, currentPacs002TimeFrame, maxQueryRange];
+  const values = [debtorAccountId, currentPacs002TimeFrame, maxQueryRange, tenantId];
 
   const queryString = `SELECT COUNT(*)::int AS length
 FROM transaction tr
 WHERE tr.destination = $1
 AND tr."txtp" = 'pacs.002.001.12'
-AND ($2::timestamptz - tr."credttm"::timestamptz) <= $3 * interval '1 millisecond';`;
+AND ($2::timestamptz - tr."credttm"::timestamptz) <= $3 * interval '1 millisecond'
+AND tr.tenantId = $4;`;
 
   // Step 3: Query Execution
 

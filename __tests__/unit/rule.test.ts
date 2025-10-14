@@ -23,13 +23,13 @@ jest.mock('@tazama-lf/frms-coe-lib', () => {
 const getMockRequest = (): RuleRequest => {
   const quote = {
     transaction: JSON.parse(
-      `{"TxTp":"pacs.002.001.12","FIToFIPmtSts":{"GrpHdr":{"MsgId":"6b444365119746c5be7dfb5516ba67c4","CreDtTm":"${new Date(
+      `{"TxTp":"pacs.002.001.12", "TenantId": "DEFAULT","FIToFIPmtSts":{"GrpHdr":{"MsgId":"6b444365119746c5be7dfb5516ba67c4","CreDtTm":"${new Date(
         'Mon Dec 03 2021 09:24:48 GMT+0000',
       ).toISOString()}"},"TxInfAndSts":{"OrgnlInstrId":"5ab4fc7355de4ef8a75b78b00a681ed2","OrgnlEndToEndId":"2c516801007642dfb892944dde1cf845","TxSts":"ACCC","ChrgsInf":[{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}}},{"Amt":{"Amt":153.57,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}}},{"Amt":{"Amt":30.71,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}}}],"AccptncDtTm":"2021-12-03T15:36:16.000Z","InstgAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}},"InstdAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}}}}}`,
     ),
 
     networkMap: JSON.parse(
-      '{"_key":"26345403","_id":"networkConfiguration/26345403","_rev":"_cxc-1vO---","messages":[{"id":"004@1.0.0","cfg":"1.0.0","txTp":"pacs.002.001.12","channels":[{"id":"001@1.0.0","cfg":"1.0.0","typologies":[{"id":"901@1.0.0","cfg":"028@1.0","rules":[{"id":"004@1.0.0","cfg":"1.0.0"},{"id":"028@1.0","cfg":"1.0.0"}]},{"id":"029@1.0","cfg":"029@1.0","rules":[{"id":"003@1.0","cfg":"1.0"},{"id":"005@1.0","cfg":"1.0"}]}]},{"id":"002@1.0","cfg":"1.0","typologies":[{"id":"030@1.0","cfg":"030@1.0","rules":[{"id":"003@1.0","cfg":"1.0"},{"id":"006@1.0","cfg":"1.0"}]},{"id":"031@1.0","cfg":"031@1.0","rules":[{"id":"003@1.0","cfg":"1.0"},{"id":"007@1.0","cfg":"1.0"}]}]}]}]}',
+      '{"_key":"26345403","_id":"networkConfiguration/26345403","_rev":"_cxc-1vO---","messages":[{"id":"004@1.0.0","cfg":"1.0.0","txTp":"pacs.002.001.12","channels":[{"id":"DEFAULT-001@1.0.0","cfg":"1.0.0","typologies":[{"id":"901@1.0.0","cfg":"028@1.0","rules":[{"id":"004@1.0.0","cfg":"1.0.0"},{"id":"028@1.0","cfg":"1.0.0"}]},{"id":"029@1.0","cfg":"029@1.0","rules":[{"id":"003@1.0","cfg":"1.0"},{"id":"005@1.0","cfg":"1.0"}]}]},{"id":"002@1.0","cfg":"1.0","typologies":[{"id":"030@1.0","cfg":"030@1.0","rules":[{"id":"003@1.0","cfg":"1.0"},{"id":"006@1.0","cfg":"1.0"}]},{"id":"031@1.0","cfg":"031@1.0","rules":[{"id":"003@1.0","cfg":"1.0"},{"id":"007@1.0","cfg":"1.0"}]}]}]}]}',
     ),
 
     DataCache: {
@@ -81,7 +81,8 @@ let ruleRes: RuleResult;
 const loggerService: LoggerService = new LoggerService({ maxCPU: 1, functionName: 'rule-901Test', nodeEnv: 'test' });
 
 const ruleConfig: RuleConfig = {
-  id: '901@1.0.0',
+  id: 'DEFAULT-901@1.0.0',
+  tenantId: 'DEFAULT',
   cfg: '1.0.0',
   desc: 'Number of outgoing transactions - debtor',
   config: {
@@ -120,8 +121,9 @@ beforeAll(async () => {
  databaseManager = await CreateDatabaseManager<RuleExecutorConfig>(databaseManagerConfig)
 
   ruleRes = {
-    id: '901@1.0.0',
+    id: 'DEFAULT-901@1.0.0',
     cfg: '1.0.0',
+    tenantId: 'DEFAULT',
     subRuleRef: '.00',
     reason: '',
   };
@@ -158,7 +160,7 @@ describe('Happy path', () => {
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
     expect(res).toEqual(
-      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".01","reason":"The debtor has performed one transaction to date"}'),
+      JSON.parse('{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".01","reason":"The debtor has performed one transaction to date", "tenantId":"DEFAULT"}'),
     );
   });
 
@@ -171,7 +173,7 @@ describe('Happy path', () => {
 
     expect(res).toEqual(
       JSON.parse(
-        '{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date"}',
+        '{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date", "tenantId":"DEFAULT"}',
       ),
     );
   });
@@ -185,7 +187,7 @@ describe('Happy path', () => {
 
     expect(res).toEqual(
       JSON.parse(
-        '{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date"}',
+        '{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date", "tenantId":"DEFAULT"}',
       ),
     );
   });
@@ -198,7 +200,7 @@ describe('Happy path', () => {
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
     expect(res).toEqual(
-      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".03","reason":"The debtor has performed 4 or more transactions to date"}'),
+      JSON.parse('{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".03","reason":"The debtor has performed 4 or more transactions to date", "tenantId":"DEFAULT"}'),
     );
   });
 });
@@ -211,7 +213,7 @@ describe('Exit conditions', () => {
     const res = await handleTransaction(newReq, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
     expect(res).toEqual(
-      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".x00","reason":"Incoming transaction is unsuccessful"}'),
+      JSON.parse('{"id":"DEFAULT-901@1.0.0", "cfg":"1.0.0","subRuleRef":".x00","reason":"Incoming transaction is unsuccessful", "tenantId":"DEFAULT"}'),
     );
   });
 });
@@ -229,7 +231,7 @@ describe('Error conditions', () => {
     try {
       await handleTransaction(newReq, determineOutcome, ruleRes, loggerService, newConfig, databaseManager);
     } catch (error) {
-      expect((error as Error).message).toBe('Unsuccessful transaction and no exit condition in config');
+      expect((error as Error).message).toBe('Unsuccessful transaction and no exit condition in ruleConfig');
     }
   });
 
@@ -319,7 +321,7 @@ describe('Error conditions', () => {
         databaseManager,
       );
     } catch (error) {
-      expect((error as Error).message).toBe('Invalid config provided - parameters not provided');
+      expect((error as Error).message).toBe('Invalid ruleConfig provided - parameters not provided');
     }
 
     try {
@@ -335,7 +337,7 @@ describe('Error conditions', () => {
         databaseManager,
       );
     } catch (error) {
-      expect((error as Error).message).toBe('Invalid config provided - maxQueryRange parameter not provided');
+      expect((error as Error).message).toBe('Invalid ruleConfig provided - maxQueryRange parameter not provided');
     }
 
     try {
@@ -351,7 +353,7 @@ describe('Error conditions', () => {
         databaseManager,
       );
     } catch (error) {
-      expect((error as Error).message).toBe('Invalid config provided - exitConditions not provided');
+      expect((error as Error).message).toBe('Invalid ruleConfig provided - exitConditions not provided');
     }
 
     try {
@@ -367,7 +369,7 @@ describe('Error conditions', () => {
         databaseManager,
       );
     } catch (error) {
-      expect((error as Error).message).toBe('Invalid config provided - bands not provided or empty');
+      expect((error as Error).message).toBe('Invalid ruleConfig provided - bands not provided or empty');
     }
 
     try {
@@ -386,7 +388,7 @@ describe('Error conditions', () => {
         databaseManager,
       );
     } catch (error) {
-      expect((error as Error).message).toBe('Invalid config provided - bands not provided or empty');
+      expect((error as Error).message).toBe('Invalid ruleConfig provided - bands not provided or empty');
     }
   });
 });
