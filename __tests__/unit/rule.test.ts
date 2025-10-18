@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import { type DatabaseManagerInstance, LoggerService, CreateDatabaseManager } from '@tazama-lf/frms-coe-lib';
+import { type Band, type RuleConfig, type RuleRequest, type RuleResult } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import { CreateStorageManager } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
 import { handleTransaction } from '../../src';
-import { type DatabaseManagerInstance, LoggerService, CreateDatabaseManager, ManagerConfig } from '@tazama-lf/frms-coe-lib';
-import { type Band, type DataCache, type RuleConfig, type RuleRequest, type RuleResult } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { RuleExecutorConfig } from '../../src/rule-901';
 
 jest.mock('@tazama-lf/frms-coe-lib', () => {
   const original = jest.requireActual('@tazama-lf/frms-coe-lib');
+    const mockDbManager = {
+    _eventHistory: { query: jest.fn() },
+    _rawHistory:   { query: jest.fn() },
+    _configuration:{ query: jest.fn() },
+    close:         jest.fn(),
+  };
   return {
     ...original,
-    aql: jest.fn(),
+    CreateDatabaseManager: jest.fn().mockResolvedValue(mockDbManager),
   };
 });
 
@@ -42,26 +49,26 @@ const getMockRequest = (): RuleRequest => {
 };
 
 const databaseManagerConfig: RuleExecutorConfig = {
-  pseudonyms: {
+  eventHistory: {
     certPath: '',
     databaseName: '',
     user: '',
     password: '',
-    url: '',
+    host: '',
   },
-  transactionHistory: {
+  rawHistory: {
     certPath: '',
     databaseName: '',
     user: '',
     password: '',
-    url: '',
+    host: '',
   },
   configuration: {
     certPath: '',
     databaseName: '',
     user: '',
     password: '',
-    url: '',
+    host: ''
   },
   localCacheConfig: {
     localCacheEnabled: false,
@@ -110,7 +117,9 @@ const ruleConfig: RuleConfig = {
 };
 
 beforeAll(async () => {
-  databaseManager = await CreateDatabaseManager(databaseManagerConfig);
+
+ databaseManager = await CreateDatabaseManager<RuleExecutorConfig>(databaseManagerConfig)
+
   ruleRes = {
     id: 'DEFAULT-901@1.0.0',
     cfg: '1.0.0',
@@ -121,7 +130,6 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-  databaseManager.quit();
 });
 
 const determineOutcome = (value: number, ruleConfig: RuleConfig, ruleResult: RuleResult): RuleResult => {
@@ -146,13 +154,8 @@ beforeEach(() => {
 describe('Happy path', () => {
   test('Should respond with .01: The debtor has performed one transaction to date', async () => {
     const mockQueryFn = jest.fn();
-    const mockBatchesAllFn = jest.fn().mockResolvedValue([[1]]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
-      batches: {
-        all: mockBatchesAllFn,
-      },
-    });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: 1 }]});
+    jest.spyOn(databaseManager._eventHistory, 'query');
 
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
@@ -163,14 +166,8 @@ describe('Happy path', () => {
 
   test('Should respond with .02: The debtor has performed two or three transactions to date', async () => {
     const mockQueryFn = jest.fn();
-
-    const mockBatchesAllFn = jest.fn().mockResolvedValue([[2]]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
-      batches: {
-        all: mockBatchesAllFn,
-      },
-    });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: 2 }]});
+    jest.spyOn(databaseManager._eventHistory, 'query');
 
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
@@ -183,14 +180,8 @@ describe('Happy path', () => {
 
   test('Should respond with .02: The debtor has performed two or three transactions to date', async () => {
     const mockQueryFn = jest.fn();
-
-    const mockBatchesAllFn = jest.fn().mockResolvedValue([[3]]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
-      batches: {
-        all: mockBatchesAllFn,
-      },
-    });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: 2 }]});
+    jest.spyOn(databaseManager._eventHistory, 'query');
 
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
@@ -203,14 +194,8 @@ describe('Happy path', () => {
 
   test('Should respond with .03: The debtor has performed 4 or more transactions to date', async () => {
     const mockQueryFn = jest.fn();
-
-    const mockBatchesAllFn = jest.fn().mockResolvedValue([[4]]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
-      batches: {
-        all: mockBatchesAllFn,
-      },
-    });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: 4 }]});
+    jest.spyOn(databaseManager._eventHistory, 'query');
 
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
@@ -222,8 +207,6 @@ describe('Happy path', () => {
 
 describe('Exit conditions', () => {
   test('Should respond with .x00: Incoming transaction is unsuccessful', async () => {
-    const mockQueryFn = jest.fn();
-
     const objClone = (req: Object) => JSON.parse(JSON.stringify(req));
     const newReq: RuleRequest = objClone(req);
     newReq.transaction.FIToFIPmtSts.TxInfAndSts.TxSts = 'something else';
@@ -238,13 +221,8 @@ describe('Exit conditions', () => {
 describe('Error conditions', () => {
   test('Unsuccessful transaction and no exit condition', async () => {
     const mockQueryFn = jest.fn();
-    const mockBatchesAllFn = jest.fn().mockResolvedValue([[{ currentAmount: 14, highestAmount: 15 }]]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
-      batches: {
-        all: mockBatchesAllFn,
-      },
-    });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: 4 }]});
+    jest.spyOn(databaseManager._eventHistory, 'query');
     const objClone = (req: Object) => JSON.parse(JSON.stringify(req));
     const newReq: RuleRequest = objClone(req);
     newReq.transaction.FIToFIPmtSts.TxInfAndSts.TxSts = 'something else';
@@ -259,14 +237,8 @@ describe('Error conditions', () => {
 
   test('No transactions', async () => {
     const mockQueryFn = jest.fn();
-
-    const mockBatchesAllFn = jest.fn().mockResolvedValue([[0]]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
-      batches: {
-        all: mockBatchesAllFn,
-      },
-    });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: 0 }]});
+    jest.spyOn(databaseManager._eventHistory, 'query');
 
     try {
       await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
@@ -277,14 +249,8 @@ describe('Error conditions', () => {
 
   test('Not a number', async () => {
     const mockQueryFn = jest.fn();
-
-    const mockBatchesAllFn = jest.fn().mockResolvedValue([['abc']]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
-      batches: {
-        all: mockBatchesAllFn,
-      },
-    });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: 'abc'}]});
+    jest.spyOn(databaseManager._eventHistory, 'query');
 
     try {
       await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
@@ -296,13 +262,8 @@ describe('Error conditions', () => {
   test('Invalid query result', async () => {
     // Mocking the request of getting oldes transation timestamp
     const mockQueryFn = jest.fn();
-    const mockBatchesAllFn = jest.fn().mockResolvedValue([[undefined]]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
-      batches: {
-        all: mockBatchesAllFn,
-      },
-    });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: undefined }]})
+    jest.spyOn(databaseManager._eventHistory, 'query');
 
     try {
       await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
@@ -315,12 +276,12 @@ describe('Error conditions', () => {
     // Mocking the request of getting oldes transation timestamp
     const mockQueryFn = jest.fn();
     const mockBatchesAllFn = jest.fn().mockResolvedValue([[undefined]]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({
       batches: {
         all: mockBatchesAllFn,
       },
     });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    jest.spyOn(databaseManager._eventHistory, 'query');
 
     try {
       await handleTransaction(
@@ -340,12 +301,12 @@ describe('Error conditions', () => {
     const mockQueryFn = jest.fn();
 
     const mockBatchesAllFn = jest.fn().mockResolvedValue([['abc']]);
-    databaseManager._pseudonymsDb.query = mockQueryFn.mockResolvedValue({
+    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({
       batches: {
         all: mockBatchesAllFn,
       },
     });
-    jest.spyOn(databaseManager._pseudonymsDb, 'query');
+    jest.spyOn(databaseManager._eventHistory, 'query');
 
     try {
       await handleTransaction(
