@@ -75,15 +75,6 @@ AND tr.tenantId = $4;`;
 
   loggerService.trace('Step 4 - Query post-processing', context, msgId);
 
-  if (length == null) {
-    // 0 is a legal value
-    throw new Error('Data error: irretrievable transaction history');
-  }
-
-  if (typeof length !== 'number') {
-    throw new Error('Data error: query result type mismatch - expected a number');
-  }
-
   // Return control to the rule-executer for rule result calculation
   loggerService.trace('End - handle transaction', context, msgId);
 
