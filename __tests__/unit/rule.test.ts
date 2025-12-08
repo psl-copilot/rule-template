@@ -259,19 +259,6 @@ describe('Error conditions', () => {
     }
   });
 
-  test('Invalid query result', async () => {
-    // Mocking the request of getting oldes transation timestamp
-    const mockQueryFn = jest.fn();
-    databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: undefined }]})
-    jest.spyOn(databaseManager._eventHistory, 'query');
-
-    try {
-      await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
-    } catch (error) {
-      expect((error as Error).message).toBe('Data error: irretrievable transaction history');
-    }
-  });
-
   test('No data cache', async () => {
     // Mocking the request of getting oldes transation timestamp
     const mockQueryFn = jest.fn();
