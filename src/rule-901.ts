@@ -17,7 +17,7 @@ export async function handleTransaction(
   ruleConfig: RuleConfig,
   databaseManager: DatabaseManagerInstance<RuleExecutorConfig>,
 ): Promise<RuleResult> {
-  const context = `Rule-${ruleConfig.id ? ruleConfig.id : '<unresolved>'} handleTransaction()`;
+  const context = `Rule-${ruleConfig.id} handleTransaction()`;
   const msgId = req.transaction.FIToFIPmtSts.GrpHdr.MsgId;
 
   loggerService.trace('Start - handle transaction', context, msgId);
