@@ -1,0 +1,30 @@
+{
+  "transaction": {
+    "TxTp": "pacs.002.001.12",
+    "FIToFIPmtSts": {
+      "GrpHdr": {
+        "MsgId": "test-message-001",
+        "CreDtTm": "2024-01-15T10:30:00.000Z"
+      },
+      "TxInfAndSts": {
+        "OrgnlInstrId": "test-instruction-001",
+        "OrgnlEndToEndId": "test-e2e-001",
+        "TxSts": "ACCP",
+        "StsRsnInf": {
+          "Rsn": {
+            "Cd": "AC01"
+          }
+        }
+      }
+    }
+  },
+  "networkMap": {
+    "messages": [],
+    "cfg": "1.0.0"
+  },
+  "metaData": {
+    "prcgTmDp": 0,
+    "prcgTmED": 0,
+    "traceParent": "00-test-trace-id-span-id-01"
+  }
+}
