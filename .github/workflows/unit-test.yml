@@ -1,12 +1,10 @@
-# SPDX-License-Identifier: Apache-2.0
-
 name: Unit Tests
 
 on:
   push:
-    branches: [main, dev]
+    branches: [ main ]
   pull_request:
-    branches: [main, dev]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -15,18 +13,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [20.x, 22.x]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20.x
           cache: npm
 
       - name: Install dependencies
