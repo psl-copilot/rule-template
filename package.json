@@ -1,7 +1,7 @@
 {
   "name": "@tazama-lf/rule-901",
-  "version": "3.0.1-rc.0",
-  "description": "Rule 901 is to calculate the number of transactions the debtor has made over a period",
+  "version": "1.0.1-rc.0",
+  "description": "Rule description",
   "main": "index.ts",
   "files": [
     "lib"
@@ -27,19 +27,7 @@
     "test:coverage": "jest --config=jest.config.ts --coverage --passWithNoTests --runInBand --detectOpenHandles --forceExit",
     "coverage": "npm run test:coverage && echo 'Coverage report generated in ./coverage/lcov-report/index.html'"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tazama-lf/rule-901.git"
-  },
-  "keywords": [
-    "rule-091"
-  ],
-  "author": "Tazama.org",
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/tazama-lf/rule-901/issues"
-  },
-  "homepage": "https://github.com/tazama-lf/rule-901#readme",
   "dependencies": {
     "@tazama-lf/frms-coe-lib": "7.0.0-rc.2"
   },
