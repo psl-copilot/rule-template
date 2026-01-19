@@ -3,11 +3,13 @@ name: Unit Tests
 on:
   push:
     branches: [dev]
+    paths-ignore:
+      - 'reports/**'
   pull_request:
     branches: [dev]
 
 permissions:
-  contents: read
+  contents: write
   packages: read
 
 jobs:
@@ -36,5 +38,48 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
+      - name: Check for test files
+        id: check_tests
+        run: |
+          if [ -f "__tests__/unit/rule.test.ts" ]; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run unit tests
+        if: steps.check_tests.outputs.has_tests == 'true'
         run: npm run test
+
+      - name: Generate test report metadata
+        if: always() && steps.check_tests.outputs.has_tests == 'true'
+        run: |
+          mkdir -p reports/unit-tests/latest
+          cat <<EOF > reports/unit-tests/latest/meta.json
+          {
+            "repo": "${{ github.repository }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "runNumber": "${{ github.run_number }}",
+            "runId": "${{ github.run_id }}",
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          }
+          EOF
+
+      - name: Upload unit test report artifact
+        if: always() && steps.check_tests.outputs.has_tests == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: reports/unit-tests
+          retention-days: 14
+
+      - name: Commit latest test report to repo
+        if: always() && steps.check_tests.outputs.has_tests == 'true'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add reports/unit-tests/latest
+          git commit -m "ci: update unit test report (run ${{ github.run_number }})" || exit 0
+          git push
