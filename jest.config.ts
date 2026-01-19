@@ -204,6 +204,20 @@ const config: Config.InitialOptions = {
 
   // Whether to use watchman for file crawling
   // watchman: true,
+
+  reporters: [
+    'default',
+    [
+      'jest-html-reporter',
+      {
+        pageTitle: 'Unit Test Report',
+        outputPath: 'reports/unit-tests/latest/index.html',
+        includeFailureMsg: true,
+        includeSuiteFailure: true,
+        includeConsoleLog: true,
+      },
+    ],
+  ],
 };
 
 export default config;
