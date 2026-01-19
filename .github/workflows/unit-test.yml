@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: [self-hosted, linux, x64, private]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
