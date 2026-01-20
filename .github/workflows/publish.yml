@@ -44,7 +44,7 @@ jobs:
           echo "@tazama-lf:registry=https://npm.pkg.github.com" >> ~/.npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
       - name: Auto-increment version
         if: steps.check_rule.outputs.has_rule == 'true'
@@ -59,13 +59,13 @@ jobs:
             npm version patch --no-git-tag-version
           fi
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
       - name: Install dependencies
         if: steps.check_rule.outputs.has_rule == 'true'
         run: npm ci
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
       - name: Build package
         if: steps.check_rule.outputs.has_rule == 'true'
@@ -81,7 +81,7 @@ jobs:
         if: steps.check_rule.outputs.has_rule == 'true'
         run: npm publish --registry=https://npm.pkg.github.com --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
       - name: Summary
         if: steps.check_rule.outputs.has_rule == 'true'
