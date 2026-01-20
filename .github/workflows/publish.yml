@@ -62,13 +62,13 @@ jobs:
             echo "Using current version: $CURRENT_VERSION"
           fi
         env:
-          GH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         if: steps.check_rule.outputs.has_rule == 'true'
         run: npm ci
         env:
-          GH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build package
         if: steps.check_rule.outputs.has_rule == 'true'
@@ -87,7 +87,7 @@ jobs:
         if: steps.check_rule.outputs.has_rule == 'true'
         run: npm publish
         env:
-          GH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
         if: steps.check_rule.outputs.has_rule == 'true'
