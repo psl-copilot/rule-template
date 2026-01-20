@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: Apache-2.0
+
+name: Build and Publish Package
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 (GitHub Packages)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: https://npm.pkg.github.com
+          scope: '@psl-copilot'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+
+      - name: Build package
+        run: npm run build
+
+      - name: Update package.json scope
+        run: |
+          # Update the package name to use @psl-copilot scope
+          sed -i 's/@tazama-lf/@psl-copilot/' package.json
+          echo "Updated package.json:"
+          cat package.json | grep '"name"'
+
+      - name: Publish to GitHub Packages
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+
+      - name: Summary
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          echo "✅ Successfully published $PACKAGE_NAME@$PACKAGE_VERSION to GitHub Packages"
