@@ -55,7 +55,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-report
-          path: reports/unit-tests
+          path: |
+            reports/unit-tests
+            coverage/html
           retention-days: 14
 
       - name: Commit latest HTML test report to repo
@@ -65,5 +67,6 @@ jobs:
           git config user.email "github-actions@github.com"
 
           git add reports/unit-tests/latest/index.html
-          git commit -m "ci: update unit test HTML report (run ${{ github.run_number }})" || exit 0
+          git add coverage/html/ || true
+          git commit -m "ci: update unit test HTML report and coverage (run ${{ github.run_number }})" || exit 0
           git push

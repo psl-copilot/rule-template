@@ -47,7 +47,14 @@ const config: Config.InitialOptions = {
   coverageProvider: 'v8',
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: ['json', 'lcov', 'text', 'text-summary', 'html', 'clover'],
+  coverageReporters: [
+    'json',
+    'lcov',
+    'text',
+    'text-summary',
+    ['html', { subdir: 'html' }],
+    'clover',
+  ],
 
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {
@@ -215,6 +222,10 @@ const config: Config.InitialOptions = {
         includeFailureMsg: true,
         includeSuiteFailure: true,
         includeConsoleLog: true,
+        includeCoverageReport: true,
+        coverageReport: {
+          includeTable: true,
+        },
       },
     ],
   ],
