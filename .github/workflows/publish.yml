@@ -36,11 +36,12 @@ jobs:
             echo "⚠️ No src/rule.ts found - skipping publish"
           fi
 
-      # 🔐 AUTHENTICATION — THIS IS THE KEY
+      # 🔐 AUTHENTICATE BOTH ORG SCOPES (CRITICAL)
       - name: Configure npm authentication
         if: steps.check_rule.outputs.has_rule == 'true'
         run: |
           echo "@psl-copilot:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "@tazama-lf:registry=https://npm.pkg.github.com" >> ~/.npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
@@ -51,11 +52,14 @@ jobs:
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           PACKAGE_NAME=$(node -p "require('./package.json').name")
 
-          PUBLISHED_VERSION=$(npm view $PACKAGE_NAME version --registry=https://npm.pkg.github.com 2>/dev/null || echo "none")
+          PUBLISHED_VERSION=$(npm view $PACKAGE_NAME version \
+            --registry=https://npm.pkg.github.com 2>/dev/null || echo "none")
 
           if [ "$PUBLISHED_VERSION" = "$CURRENT_VERSION" ]; then
             npm version patch --no-git-tag-version
           fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       - name: Install dependencies
         if: steps.check_rule.outputs.has_rule == 'true'
