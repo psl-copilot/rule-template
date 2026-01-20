@@ -29,26 +29,43 @@ jobs:
           scope: '@psl-copilot'
           cache: npm
 
+      - name: Check for rule file
+        id: check_rule
+        run: |
+          if [ -f "src/rule.ts" ]; then
+            echo "has_rule=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_rule=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No src/rule.ts found - skipping build and publish"
+          fi
+
       - name: Install dependencies
+        if: steps.check_rule.outputs.has_rule == 'true'
         run: npm ci
         env:
           GH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       - name: Build package
+        if: steps.check_rule.outputs.has_rule == 'true'
         run: npm run build
 
       - name: Update package.json scope
+        if: steps.check_rule.outputs.has_rule == 'true'
         run: |
           # Update the package name to use @psl-copilot scope
           sed -i 's/@tazama-lf/@psl-copilot/' package.json
+          # Update publishConfig registry
+          sed -i 's/@tazama-lf:registry/@psl-copilot:registry/' package.json
           echo "Updated package.json:"
-          cat package.json | grep '"name"'
+          cat package.json | grep -A 3 '"name"\|publishConfig'
       - name: Publish to GitHub Packages
+        if: steps.check_rule.outputs.has_rule == 'true'
         run: npm publish
         env:
           GH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       - name: Summary
+        if: steps.check_rule.outputs.has_rule == 'true'
         run: |
           PACKAGE_NAME=$(node -p "require('./package.json').name")
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
