@@ -19,7 +19,10 @@ jobs:
       github.actor != 'dependabot[bot]' && 
       github.actor != 'dependabot-preview[bot]' &&
       (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
-    runs-on: [self-hosted, linux, x64, private]
+    runs-on:
+    - self-hosted
+    - linux
+    - x64
     env:
       RULE_NAME: ${{ github.event.repository.name }}
 
