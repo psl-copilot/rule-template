@@ -47,22 +47,15 @@ const config: Config.InitialOptions = {
   coverageProvider: 'v8',
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: [
-    'json',
-    'lcov',
-    'text',
-    'text-summary',
-    ['html', { subdir: 'html' }],
-    'clover',
-  ],
+  coverageReporters: ['json', 'json-summary', 'lcov', 'text', 'text-summary', ['html', { subdir: 'html' }], 'clover'],
 
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {
     global: {
       branches: 95,
-      functions: 95,
-      lines: 95,
-      statements: 95,
+      functions: 100,
+      lines: 97.5,
+      statements: 97.5,
     },
   },
 
@@ -215,17 +208,9 @@ const config: Config.InitialOptions = {
   reporters: [
     'default',
     [
-      'jest-html-reporter',
+      '<rootDir>/custom-reporter.js',
       {
-        pageTitle: 'Unit Test Report',
         outputPath: 'reports/unit-tests/latest/index.html',
-        includeFailureMsg: true,
-        includeSuiteFailure: true,
-        includeConsoleLog: true,
-        includeCoverageReport: true,
-        coverageReport: {
-          includeTable: true,
-        },
       },
     ],
   ],

@@ -1,277 +1,470 @@
-<html><head><meta charset="utf-8"/><title>Unit Test Report</title><style type="text/css">:root {
-  --text-primary: #111;
-  --text-secondary: #4f4f4f;
-  --success: #006633;
-  --success-bright: #80ffbf;
-  --danger: #cc071e;
-  --danger-bright: #fbdfe0;
-  --warning: #995c00;
-  --warning-bright: #ffeea8;
-  --panel: #eee;
-  --border: #949494;
-  --disabled: #6b6b6b;
-}
+<!DOCTYPE html>
+<html lang="en">
 
-html,
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 16px;
-  margin: 0;
-  padding: 0;
-  color: var(--text-primary);
-}
-body {
-  padding: 2rem 1rem;
-}
-.jesthtml-content {
-  margin: 0 auto;
-  max-width: 70rem;
-}
-header {
-  display: flex;
-  align-items: center;
-}
-#title {
-  margin: 0;
-  flex-grow: 1;
-}
-#logo {
-  height: 4rem;
-}
-#timestamp {
-  color: var(--text-secondary);
-  margin-top: 0.5rem;
-}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tazama Unit Test Report</title>
+    <style>
+        :root {
+            --tazama-green: #3DBE8C;
+            --tazama-dark-green: #2A8D68;
+            --tazama-light-green: #E8F8F3;
+            --success: #3DBE8C;
+            --danger: #E74C3C;
+            --warning: #F39C12;
+            --text-dark: #1a1a1a;
+            --text-muted: #666;
+        }
 
-#metadata-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-.additional-information-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #E8F8F3 0%, #d4f0e6 50%, #E8F8F3 100%);
+            min-height: 100vh;
+            padding: 30px;
+            position: relative;
+        }
 
-/** SUMMARY */
-#summary {
-  color: var(--text-primary);
-  display: flex;
-  font-family: monospace;
-  font-size: 1rem;
-}
-#summary > div {
-  margin-right: 0.5rem;
-  background: var(--panel);
-  padding: 1rem;
-  min-width: 15rem;
-}
-#summary > div:last-child {
-  margin-right: 0;
-}
-@media only screen and (max-width: 720px) {
-  #summary {
-    flex-direction: column;
-  }
-  #summary > div {
-    margin-right: 0;
-    margin-top: 1rem;
-  }
-  #summary > div:first-child {
-    margin-top: 0;
-  }
-}
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 25% 25%, rgba(61, 190, 140, 0.08) 2%, transparent 2.5%), radial-gradient(circle at 75% 75%, rgba(61, 190, 140, 0.08) 2%, transparent 2.5%), linear-gradient(45deg, transparent 40%, rgba(61, 190, 140, 0.03) 40%, rgba(61, 190, 140, 0.03) 60%, transparent 60%), linear-gradient(-45deg, transparent 40%, rgba(61, 190, 140, 0.03) 40%, rgba(61, 190, 140, 0.03) 60%, transparent 60%);
+            background-size: 80px 80px, 80px 80px, 120px 120px, 120px 120px;
+            z-index: -1;
+            pointer-events: none;
+        }
 
-.summary-total {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-.summary-passed {
-  color: var(--success);
-  border-left: 0.4rem solid var(--success);
-  padding-left: 0.5rem;
-  margin-bottom: 0.15rem;
-}
-.summary-failed,
-.summary-obsolete-snapshots {
-  color: var(--danger);
-  border-left: 0.4rem solid var(--danger);
-  padding-left: 0.5rem;
-  margin-bottom: 0.15rem;
-}
-.summary-pending {
-  color: var(--warning);
-  border-left: 0.4rem solid var(--warning);
-  padding-left: 0.5rem;
-  margin-bottom: 0.15rem;
-}
-.summary-empty {
-  color: var(--disabled);
-  border-left: 0.4rem solid var(--disabled);
-  margin-bottom: 0.15rem;
-}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(61, 190, 140, 0.2), 0 0 0 1px rgba(61, 190, 140, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
 
-.test-result {
-  padding: 1rem;
-  margin-bottom: 0.25rem;
-}
-.test-result:last-child {
-  border: 0;
-}
-.test-result.passed {
-  background-color: var(--success-bright);
-  color: var(--success);
-}
-.test-result.failed {
-  background-color: var(--danger-bright);
-  color: var(--danger);
-}
-.test-result.pending {
-  background-color: var(--warning-bright);
-  color: var(--warning);
-}
+        .header {
+            background: linear-gradient(135deg, var(--tazama-green) 0%, var(--tazama-dark-green) 100%);
+            color: white;
+            padding: 40px 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-.test-info {
-  display: flex;
-  justify-content: space-between;
-}
-.test-suitename {
-  width: 20%;
-  text-align: left;
-  font-weight: bold;
-  word-break: break-word;
-}
-.test-title {
-  width: 40%;
-  text-align: left;
-  font-style: italic;
-}
-.test-status {
-  width: 20%;
-  text-align: right;
-}
-.test-duration {
-  width: 10%;
-  text-align: right;
-  font-size: 0.85rem;
-}
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
 
-.failureMessages {
-  padding: 0 1rem;
-  margin-top: 1rem;
-  border-top: 1px dashed var(--danger);
-}
-.failureMessages.suiteFailure {
-  border-top: none;
-}
-.failureMsg {
-  white-space: pre-wrap;
-  white-space: -moz-pre-wrap;
-  white-space: -pre-wrap;
-  white-space: -o-pre-wrap;
-  word-wrap: break-word;
-}
+        .header-logo {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
 
-.suite-container {
-  margin-bottom: 1rem;
-}
-.suite-info {
-  padding: 1rem;
-  background-color: var(--panel);
-  color: var(--text-secondary);
-  border: 0.15rem solid;
-  border-color: var(--panel);
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.25rem;
-}
-.suite-info:hover {
-  border-color: var(--border);
-  cursor: pointer;
-}
-.suite-info .suite-path {
-  word-break: break-all;
-  flex-grow: 1;
-  font-family: monospace;
-  font-size: 1rem;
-}
-.suite-info .suite-time {
-  margin-left: 1rem;
-  padding: 0.2rem 0.3rem;
-  font-size: 0.85rem;
-}
-.suite-info .suite-time.warn {
-  background-color: var(--danger);
-  color: #fff;
-}
-.suite-info:before {
-  content: "\2303";
-  display: inline-block;
-  margin-right: 1rem;
-  transform: rotate(180deg) translateY(0.15rem);
-}
-.suite-container[open] .suite-info:before {
-  transform: rotate(0deg) translateY(0.15rem);
-}
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            position: relative;
+        }
 
-/* CONSOLE LOGS */
-.suite-consolelog {
-  margin-bottom: 0.25rem;
-  padding: 1rem;
-  background-color: var(--panel);
-}
-.suite-consolelog-header {
-  font-weight: bold;
-}
-.suite-consolelog-item {
-  padding: 0.5rem;
-}
-.suite-consolelog-item pre {
-  margin: 0.5rem 0;
-  white-space: pre-wrap;
-  white-space: -moz-pre-wrap;
-  white-space: -pre-wrap;
-  white-space: -o-pre-wrap;
-  word-wrap: break-word;
-}
-.suite-consolelog-item-origin {
-  color: var(--text-secondary);
-  font-weight: bold;
-}
-.suite-consolelog-item-message {
-  color: var(--text-primary);
-  font-size: 1rem;
-  padding: 0 0.5rem;
-}
+        .header .subtitle {
+            opacity: 0.9;
+            font-size: 16px;
+            position: relative;
+        }
 
-/* OBSOLETE SNAPSHOTS */
-.suite-obsolete-snapshots {
-  margin-bottom: 0.25rem;
-  padding: 1rem;
-  background-color: var(--danger-bright);
-  color: var(--danger);
-}
-.suite-obsolete-snapshots-header {
-  font-weight: bold;
-}
-.suite-obsolete-snapshots-item {
-  padding: 0.5rem;
-}
-.suite-obsolete-snapshots-item pre {
-  margin: 0.5rem 0;
-  white-space: pre-wrap;
-  white-space: -moz-pre-wrap;
-  white-space: -pre-wrap;
-  white-space: -o-pre-wrap;
-  word-wrap: break-word;
-}
-.suite-obsolete-snapshots-item-message {
-  color: var(--text-primary);
-  font-size: 1rem;
-  padding: 0 0.5rem;
-}
-</style></head><body><main class="jesthtml-content"><header><h1 id="title">Unit Test Report</h1></header><section id="metadata-container"><div id="timestamp">Started: 2026-01-21 17:17:10</div><div id="summary"><div id="suite-summary"><div class="summary-total">Suites (0)</div><div class="summary-passed  summary-empty">0 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div><div id="test-summary"><div class="summary-total">Tests (0)</div><div class="summary-passed  summary-empty">0 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div></div></section></main></body></html>
+        .header .timestamp {
+            margin-top: 15px;
+            font-size: 14px;
+            opacity: 0.8;
+            position: relative;
+        }
+
+        .content {
+            padding: 40px 50px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, var(--tazama-light-green) 0%, white 100%);
+            border: 2px solid var(--tazama-green);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(61, 190, 140, 0.25);
+            border-color: var(--tazama-dark-green);
+        }
+
+        .card-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--tazama-green);
+        }
+
+        .card.passed .card-value {
+            color: var(--success);
+        }
+
+        .card.failed .card-value {
+            color: var(--danger);
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .coverage-section {
+            margin-bottom: 40px;
+        }
+
+        .coverage-section h2 {
+            color: var(--tazama-green);
+            font-size: 24px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--tazama-light-green);
+        }
+
+        .coverage-table-container {
+            overflow-x: auto;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            border: 3px solid var(--tazama-green);
+            box-shadow: 0 5px 20px rgba(61, 190, 140, 0.15);
+        }
+
+        .coverage-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-size: 14px;
+        }
+
+        .coverage-table thead {
+            background: linear-gradient(135deg, var(--tazama-green) 0%, var(--tazama-dark-green) 100%);
+        }
+
+        .coverage-table th {
+            color: white;
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .coverage-table .th-file {
+            text-align: left;
+            min-width: 150px;
+        }
+
+        .coverage-table .th-pct {
+            min-width: 90px;
+        }
+
+        .coverage-table .th-uncovered {
+            min-width: 150px;
+        }
+
+        .coverage-table td {
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .coverage-table .cell-file {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .coverage-table .total-row {
+            background: var(--tazama-light-green);
+            font-weight: 600;
+        }
+
+        .coverage-table .total-row td {
+            border-color: var(--tazama-green);
+        }
+
+        .coverage-table .file-row:hover {
+            background: rgba(61, 190, 140, 0.08);
+        }
+
+        .coverage-table .cell-pct {
+            font-weight: 600;
+        }
+
+        .coverage-table .cell-pct.high {
+            color: var(--success);
+        }
+
+        .coverage-table .cell-pct.medium {
+            color: var(--warning);
+        }
+
+        .coverage-table .cell-pct.low {
+            color: var(--danger);
+        }
+
+        .coverage-table .cell-uncovered {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .coverage-summary-box {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px 25px;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-size: 14px;
+            color: #d4d4d4;
+        }
+
+        .coverage-summary-box .summary-header,
+        .coverage-summary-box .summary-footer {
+            color: var(--tazama-green);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .coverage-summary-box .summary-footer {
+            margin-bottom: 0;
+            margin-top: 15px;
+        }
+
+        .coverage-summary-box .summary-row {
+            padding: 8px 0;
+        }
+
+        .coverage-summary-box .summary-label {
+            color: #9cdcfe;
+        }
+
+        .coverage-summary-box .summary-value {
+            color: var(--success);
+        }
+
+        .test-section {
+            margin-top: 40px;
+        }
+
+        .test-section h2 {
+            color: var(--tazama-green);
+            font-size: 24px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--tazama-light-green);
+        }
+
+        .test-cards-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .test-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 20px;
+            background: white;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .test-card:hover {
+            transform: translateX(8px);
+            border-color: var(--tazama-green);
+            box-shadow: 0 8px 25px rgba(61, 190, 140, 0.15);
+        }
+
+        .test-card.passed {
+            border-left: 5px solid var(--success);
+        }
+
+        .test-card.failed {
+            border-left: 5px solid var(--danger);
+        }
+
+        .test-card .test-icon {
+            font-size: 22px;
+        }
+
+        .test-card .test-name {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .test-card .test-duration {
+            font-family: monospace;
+            color: var(--text-muted);
+            background: #f5f5f5;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .test-summary-box {
+            margin-top: 25px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px 25px;
+            border-radius: 12px;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .test-summary-box .line-green {
+            color: var(--success);
+        }
+
+        .test-summary-box .line-yellow {
+            color: #e5c07b;
+        }
+
+        .footer {
+            background: var(--tazama-light-green);
+            padding: 25px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .footer strong {
+            color: var(--tazama-green);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Tazama Unit Test Report</h1>
+            <p class="subtitle">Unit Test Execution Report</p>
+            <p class="timestamp">Generated: 1/21/2026, 2:40:17 PM</p>
+        </div>
+        <div class="content">
+            <div class="summary-cards">
+                <div class="card">
+                    <div class="card-title">Total Tests</div>
+                    <div class="card-value">0</div>
+                    <div class="card-subtitle">Test cases executed</div>
+                </div>
+                <div class="card passed">
+                    <div class="card-title">Passed</div>
+                    <div class="card-value">0</div>
+                    <div class="card-subtitle">✅ Successful</div>
+                </div>
+                <div class="card failed">
+                    <div class="card-title">Failed</div>
+                    <div class="card-value">0</div>
+                    <div class="card-subtitle">🎉 All passed!</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Duration</div>
+                    <div class="card-value">0.024<span style="font-size: 18px;">s</span></div>
+                    <div class="card-subtitle">⏱️ Execution time</div>
+                </div>
+            </div>
+            <div class="coverage-section">
+                <h2>📊 Code Coverage</h2>
+                <div class="coverage-table-container">
+                    <table class="coverage-table">
+                        <thead>
+                            <tr>
+                                <th class="th-file">File</th>
+                                <th class="th-pct">% Stmts</th>
+                                <th class="th-pct">% Branch</th>
+                                <th class="th-pct">% Funcs</th>
+                                <th class="th-pct">% Lines</th>
+                                <th class="th-uncovered">Uncovered Line #s</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="total-row">
+                                <td class="cell-file"><strong>All files</strong></td>
+                                <td class="cell-pct low">Unknown</td>
+                                <td class="cell-pct low">Unknown</td>
+                                <td class="cell-pct low">Unknown</td>
+                                <td class="cell-pct low">Unknown</td>
+                                <td class="cell-uncovered"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="coverage-summary-box">
+                    <div class="summary-header">=============================== Coverage summary
+                        ===============================</div>
+                    <div class="summary-row"><span class="summary-label">Statements</span> : <span
+                            class="summary-value">Unknown% ( 0/0 )</span></div>
+                    <div class="summary-row"><span class="summary-label">Branches</span> : <span
+                            class="summary-value">Unknown% ( 0/0 )</span></div>
+                    <div class="summary-row"><span class="summary-label">Functions</span> : <span
+                            class="summary-value">Unknown% ( 0/0 )</span></div>
+                    <div class="summary-row"><span class="summary-label">Lines</span> : <span
+                            class="summary-value">Unknown% ( 0/0 )</span></div>
+                    <div class="summary-footer">
+                        ================================================================================</div>
+                </div>
+            </div>
+            <div class="test-section">
+                <h2>📋 Test Execution Details</h2>
+                <div class="test-cards-grid"> </div>
+                <div class="test-summary-box">
+                    <div><span class="line-green">Test Suites:</span> 1 passed, 1 total</div>
+                    <div><span class="line-green">Tests:</span> 0 passed, 0 total</div>
+                    <div><span class="line-yellow">Snapshots:</span> 0 total</div>
+                    <div><span class="line-yellow">Time:</span> 0.024 s</div>
+                    <div>Ran all test suites.</div>
+                </div>
+            </div>
+        </div>
+        <div class="footer"> <strong>Tazama</strong> - Financial Crime Risk Management System<br> © 2026 Tazama. Powered
+            by Paysys Labs. </div>
+    </div>
+</body>
+
+</html>

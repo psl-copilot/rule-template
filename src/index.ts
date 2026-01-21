@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// @ts-expect-error -- module is resolved at runtime, types not available
+// @ts-expect-error Module will be generated at build time
 import { handleTransaction } from './rule';
 export { handleTransaction };
