@@ -1,0 +1,103 @@
+# SPDX-License-Identifier: Apache-2.0
+
+name: Rule Executer - Rule processor Automation
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:  
+  workflow_run:
+    workflows: ["Build and Publish Package"]
+    types:
+      - completed
+    branches:
+      - dev
+jobs:
+  automate-rule-executer:
+    if: |
+      github.actor != 'dependabot[bot]' && 
+      github.actor != 'dependabot-preview[bot]' &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+    runs-on: [self-hosted, linux, x64, private]
+    env:
+      RULE_NAME: ${{ github.event.repository.name }}
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 (GitHub Packages)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: https://npm.pkg.github.com
+          scope: '@tazama-lf'
+          cache: npm
+
+      # Step 2: Clone Rule Executer Repo and delete package-lock.json file
+      - name: Clone Rule Executer Repo
+        run: |
+          echo "Cloning Rule Executer repo and removing package-lock.json file..."
+          git clone https://github.com/tazama-lf/rule-executer -b dev
+          cd rule-executer 
+          rm -f package-lock.json
+          cd ..
+          echo "Clone completed."
+        env:
+          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
+      # Step 3: Duplicate Rule Executer Folder to 'rule-executer-$RULE_NAME'
+      - name: Duplicate Rule Executer Folder
+        run: |
+          echo "Duplicating Rule Executer folder to rule-executer-$RULE_NAME..."
+          cp -R rule-executer rule-executer-$RULE_NAME
+          echo "Rule Executer folder duplicated."
+
+      # Step 4: Update the version in package.json and rule number in Dockerfile
+      - name: Install jq
+        run: sudo dnf install -y jq
+      
+      - name: Modify Rule Executer Files
+        run: |
+          echo "Modifying rule-executer-$RULE_NAME files..."
+          # Extract ruleVersion from current repo's package.json
+          ruleVersion=$(jq -r '.version' package.json)
+          if [ -z "$ruleVersion" ] || [ "$ruleVersion" = "null" ]; then
+            echo "❌ Error: Could not fetch ruleVersion from package.json"
+            exit 1
+          fi
+          echo "Fetched ruleVersion from package.json: $ruleVersion"
+          
+          # Update namespace and rule dependency
+          sed -i 's/npm:@tazama-lf/npm:@psl-copilot/' rule-executer-$RULE_NAME/package.json
+          sed -i 's/rule-901@[^"]*"/'"$RULE_NAME"'@'"${ruleVersion}"'"/g' rule-executer-$RULE_NAME/package.json
+          sed -i "s/901/$RULE_NAME/" rule-executer-$RULE_NAME/Dockerfile
+          echo "Successfully modified rule-executer-$RULE_NAME files."
+      # Verify Changes in modified files
+      - name: Verify Changes
+        run: |
+          cat rule-executer-$RULE_NAME/package.json
+          cat rule-executer-$RULE_NAME/Dockerfile
+      # Step 5: Build Rule Packages
+      - name: Build Rule Packages
+        run: |
+          echo "Building rule packages..."
+          cd rule-executer-$RULE_NAME && npm install
+          echo "Rule packages built."
+        env:
+          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
+      # Step 6: Build Docker Image and Deploy Container Locally
+      - name: Build Docker Image and Deploy Container Locally
+        run: |
+          echo "Building Docker image locally on self-hosted runner..."
+          docker build -t psl-copilot/$RULE_NAME:latest rule-executer-$RULE_NAME
+          echo "Docker Image build complete."
+          
+          echo "Stopping and removing existing container if running..."
+          docker stop $RULE_NAME || true
+          docker rm $RULE_NAME || true
+          
+          echo "Deploying container on local server..."
+          docker run -d --name $RULE_NAME --restart unless-stopped psl-copilot/$RULE_NAME:latest
+          echo "Container deployed successfully."
