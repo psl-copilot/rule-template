@@ -101,6 +101,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
+      - name: Generate package-lock.json for Docker build
+        run: |
+          export NPM_CONFIG_USERCONFIG="$HOME/.npmrc"
+          cd rule-executer-$RULE_NAME
+          npm install --ignore-scripts --package-lock-only
+
       # Step 6: Build Docker Image and Deploy Container Locally
       - name: Build Docker Image and Deploy Container Locally
         run: |
