@@ -83,21 +83,28 @@ jobs:
       # Configure npm for GitHub Packages
       - name: Configure npm for GitHub Packages
         run: |
-          echo "@tazama-lf:registry=https://npm.pkg.github.com" >> "$NPM_CONFIG_USERCONFIG"
-          echo "@psl-copilot:registry=https://npm.pkg.github.com" >> "$NPM_CONFIG_USERCONFIG"
-          echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> "$NPM_CONFIG_USERCONFIG"
+          export NPMRC_PATH="$HOME/.npmrc"
+          echo "@tazama-lf:registry=https://npm.pkg.github.com" >  "$NPMRC_PATH"
+          echo "@psl-copilot:registry=https://npm.pkg.github.com" >> "$NPMRC_PATH"
+          echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> "$NPMRC_PATH"
+
           echo "=== ACTIVE npmrc ==="
-          cat "$NPM_CONFIG_USERCONFIG"
+          cat "$NPMRC_PATH"
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
+
 
       
       # Step 5: Build Rule Packages
       - name: Build Rule Packages
         run: |
+          export NPM_CONFIG_USERCONFIG="$HOME/.npmrc"
           echo "Building rule packages..."
-          cd rule-executer-$RULE_NAME && rm -rf package-lock.json && npm install
+          cd rule-executer-$RULE_NAME
+          rm -rf package-lock.json
+          npm install
           echo "Rule packages built."
+
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
       # Step 6: Build Docker Image and Deploy Container Locally
