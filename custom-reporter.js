@@ -17,7 +17,11 @@ class TazamaHtmlReporter {
 
   formatPct(value) {
     if (value === undefined || value === null || isNaN(value)) {
-      return '0%';
+      return 'Unknown';
+    }
+    // Handle string "Unknown" from coverage data
+    if (typeof value === 'string') {
+      return value;
     }
     return value.toFixed(2) + '%';
   }
@@ -35,8 +39,15 @@ class TazamaHtmlReporter {
     const coverageSummaryPath = path.join(process.cwd(), 'coverage', 'coverage-summary.json');
     if (fs.existsSync(coverageSummaryPath)) {
       try {
-        coverageData = JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8'));
+        const rawData = fs.readFileSync(coverageSummaryPath, 'utf8');
+        coverageData = JSON.parse(rawData);
         console.log('✅ Coverage summary loaded successfully');
+        console.log('Total coverage:', {
+          statements: coverageData.total?.statements?.pct,
+          branches: coverageData.total?.branches?.pct,
+          functions: coverageData.total?.functions?.pct,
+          lines: coverageData.total?.lines?.pct,
+        });
       } catch (e) {
         console.log('❌ Error reading coverage summary:', e.message);
       }
