@@ -58,8 +58,8 @@ jobs:
           echo "Rule Executer folder duplicated."
 
       # Step 4: Update the version in package.json and rule number in Dockerfile
-      - name: Install jq
-        run: dnf install -y jq
+      # - name: Install jq
+      #   run: dnf install -y jq
       
       - name: Modify Rule Executer Files
         run: |
