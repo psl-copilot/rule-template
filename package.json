@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "clean": "npx rimraf lib node_modules coverage package-lock.json",
+    "clean:coverage": "npx rimraf coverage reports",
     "fix": "npm run fix:prettier && npm run fix:eslint",
     "fix:eslint": "eslint --fix",
     "fix:prettier": "prettier --write \"**/*.ts\"",
@@ -22,9 +23,9 @@
     "lint:eslint-no-inline": "eslint --no-inline-config",
     "lint:prettier": "prettier --check \"**/*.ts\"",
     "prepare": "husky",
-    "test": "jest --config=jest.config.ts --passWithNoTests --runInBand --detectOpenHandles --forceExit",
+    "test": "npm run clean:coverage && jest --config=jest.config.ts --passWithNoTests --runInBand && node generate-report.js",
     "test:watch": "jest --config=jest.config.ts --watch",
-    "test:coverage": "jest --config=jest.config.ts --coverage --passWithNoTests --runInBand --detectOpenHandles --forceExit",
+    "test:coverage": "npm run clean:coverage && jest --config=jest.config.ts --coverage --passWithNoTests --runInBand && node generate-report.js",
     "coverage": "npm run test:coverage && echo 'Coverage report generated in ./coverage/lcov-report/index.html'"
   },
   "license": "Apache-2.0",

@@ -34,41 +34,33 @@ class TazamaHtmlReporter {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    // Read coverage summary for percentages
-    let coverageData = null;
-    const coverageSummaryPath = path.join(process.cwd(), 'coverage', 'coverage-summary.json');
-    if (fs.existsSync(coverageSummaryPath)) {
-      try {
-        const rawData = fs.readFileSync(coverageSummaryPath, 'utf8');
-        coverageData = JSON.parse(rawData);
-        console.log('✅ Coverage summary loaded successfully');
-        console.log('Total coverage:', {
-          statements: coverageData.total?.statements?.pct,
-          branches: coverageData.total?.branches?.pct,
-          functions: coverageData.total?.functions?.pct,
-          lines: coverageData.total?.lines?.pct,
-        });
-      } catch (e) {
-        console.log('❌ Error reading coverage summary:', e.message);
-      }
-    } else {
-      console.log('⚠️  Coverage summary file not found at:', coverageSummaryPath);
+    // Save test results to a temp file for post-processing
+    const tempResultsPath = path.join(process.cwd(), 'coverage', 'test-results.json');
+    const tempResultsDir = path.dirname(tempResultsPath);
+    if (!fs.existsSync(tempResultsDir)) {
+      fs.mkdirSync(tempResultsDir, { recursive: true });
     }
 
-    // Read detailed coverage for uncovered lines
-    let detailedCoverage = null;
-    const coverageFinalPath = path.join(process.cwd(), 'coverage', 'coverage-final.json');
-    if (fs.existsSync(coverageFinalPath)) {
-      try {
-        detailedCoverage = JSON.parse(fs.readFileSync(coverageFinalPath, 'utf8'));
-      } catch (e) {
-        console.log('Could not read detailed coverage');
-      }
-    }
+    // Save just the essential test results
+    const essentialResults = {
+      numTotalTests: results.numTotalTests,
+      numPassedTests: results.numPassedTests,
+      numFailedTests: results.numFailedTests,
+      numTotalTestSuites: results.numTotalTestSuites,
+      numPassedTestSuites: results.numPassedTestSuites,
+      startTime: results.startTime,
+      testResults: results.testResults.map((tr) => ({
+        testFilePath: tr.testFilePath,
+        testResults: tr.testResults.map((t) => ({
+          title: t.title,
+          status: t.status,
+          duration: t.duration,
+        })),
+      })),
+    };
 
-    const html = this.generateHTML(results, coverageData, detailedCoverage);
-    fs.writeFileSync(outputPath, html);
-    console.log('\n📊 Tazama Test Report generated: ' + outputPath);
+    fs.writeFileSync(tempResultsPath, JSON.stringify(essentialResults, null, 2));
+    console.log('\n⏳ Test results saved. Coverage report will be generated after Jest finishes writing coverage files...');
   }
 
   // Extract uncovered line numbers from detailed coverage
