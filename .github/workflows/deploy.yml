@@ -111,7 +111,7 @@ jobs:
       - name: Build Docker Image and Deploy Container Locally
         run: |
           echo "Building Docker image locally on self-hosted runner..."
-          docker build -t psl-copilot/$RULE_NAME:latest rule-executer-$RULE_NAME
+          docker build --build-arg GH_TOKEN=${GH_TOKEN} --secret id=npmrc,src=$HOME/.npmrc -t psl-copilot/$RULE_NAME:latest rule-executer-$RULE_NAME
           echo "Docker Image build complete."
           
           echo "Stopping and removing existing container if running..."
