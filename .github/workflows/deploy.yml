@@ -88,6 +88,7 @@ jobs:
           echo "Configuring npm to use GitHub Packages for @psl-copilot scope..."
           cd rule-executer-$RULE_NAME
           echo "@psl-copilot:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "@tazama-lf:registry=https://npm.pkg.github.com" >> .npmrc
           echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> .npmrc
           echo "npm configuration complete."
         env:
