@@ -15,6 +15,13 @@ class TazamaHtmlReporter {
     return 'low';
   }
 
+  formatPct(value) {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '0%';
+    }
+    return value.toFixed(2) + '%';
+  }
+
   onRunComplete(contexts, results) {
     const outputPath = this._options.outputPath || 'reports/unit-tests/latest/index.html';
     const dir = path.dirname(outputPath);
@@ -29,9 +36,12 @@ class TazamaHtmlReporter {
     if (fs.existsSync(coverageSummaryPath)) {
       try {
         coverageData = JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8'));
+        console.log('✅ Coverage summary loaded successfully');
       } catch (e) {
-        console.log('Could not read coverage summary');
+        console.log('❌ Error reading coverage summary:', e.message);
       }
+    } else {
+      console.log('⚠️  Coverage summary file not found at:', coverageSummaryPath);
     }
 
     // Read detailed coverage for uncovered lines
@@ -170,22 +180,22 @@ class TazamaHtmlReporter {
           '<td class="cell-pct ' +
           self.getCoverageClass(file.statements.pct) +
           '">' +
-          file.statements.pct +
+          self.formatPct(file.statements.pct) +
           '</td>' +
           '<td class="cell-pct ' +
           self.getCoverageClass(file.branches.pct) +
           '">' +
-          file.branches.pct +
+          self.formatPct(file.branches.pct) +
           '</td>' +
           '<td class="cell-pct ' +
           self.getCoverageClass(file.functions.pct) +
           '">' +
-          file.functions.pct +
+          self.formatPct(file.functions.pct) +
           '</td>' +
           '<td class="cell-pct ' +
           self.getCoverageClass(file.lines.pct) +
           '">' +
-          file.lines.pct +
+          self.formatPct(file.lines.pct) +
           '</td>' +
           '<td class="cell-uncovered">' +
           uncoveredText +
@@ -212,22 +222,22 @@ class TazamaHtmlReporter {
         '<td class="cell-pct ' +
         this.getCoverageClass(total.statements.pct) +
         '">' +
-        total.statements.pct +
+        this.formatPct(total.statements.pct) +
         '</td>' +
         '<td class="cell-pct ' +
         this.getCoverageClass(total.branches.pct) +
         '">' +
-        total.branches.pct +
+        this.formatPct(total.branches.pct) +
         '</td>' +
         '<td class="cell-pct ' +
         this.getCoverageClass(total.functions.pct) +
         '">' +
-        total.functions.pct +
+        this.formatPct(total.functions.pct) +
         '</td>' +
         '<td class="cell-pct ' +
         this.getCoverageClass(total.lines.pct) +
         '">' +
-        total.lines.pct +
+        this.formatPct(total.lines.pct) +
         '</td>' +
         '<td class="cell-uncovered"></td>' +
         '</tr>' +
@@ -236,32 +246,32 @@ class TazamaHtmlReporter {
         '<div class="coverage-summary-box">' +
         '<div class="summary-header">=============================== Coverage summary ===============================</div>' +
         '<div class="summary-row"><span class="summary-label">Statements</span> : <span class="summary-value">' +
-        total.statements.pct +
-        '% ( ' +
-        total.statements.covered +
+        this.formatPct(total.statements.pct) +
+        ' ( ' +
+        (total.statements.covered || 0) +
         '/' +
-        total.statements.total +
+        (total.statements.total || 0) +
         ' )</span></div>' +
         '<div class="summary-row"><span class="summary-label">Branches</span>   : <span class="summary-value">' +
-        total.branches.pct +
-        '% ( ' +
-        total.branches.covered +
+        this.formatPct(total.branches.pct) +
+        ' ( ' +
+        (total.branches.covered || 0) +
         '/' +
-        total.branches.total +
+        (total.branches.total || 0) +
         ' )</span></div>' +
         '<div class="summary-row"><span class="summary-label">Functions</span>  : <span class="summary-value">' +
-        total.functions.pct +
-        '% ( ' +
-        total.functions.covered +
+        this.formatPct(total.functions.pct) +
+        ' ( ' +
+        (total.functions.covered || 0) +
         '/' +
-        total.functions.total +
+        (total.functions.total || 0) +
         ' )</span></div>' +
         '<div class="summary-row"><span class="summary-label">Lines</span>      : <span class="summary-value">' +
-        total.lines.pct +
-        '% ( ' +
-        total.lines.covered +
+        this.formatPct(total.lines.pct) +
+        ' ( ' +
+        (total.lines.covered || 0) +
         '/' +
-        total.lines.total +
+        (total.lines.total || 0) +
         ' )</span></div>' +
         '<div class="summary-footer">================================================================================</div>' +
         '</div></div>';
