@@ -72,9 +72,8 @@ jobs:
           fi
           echo "Fetched ruleVersion from package.json: $ruleVersion"
           
-          # Update namespace and rule dependency
-          sed -i 's/npm:@tazama-lf/npm:@psl-copilot/' rule-executer-$RULE_NAME/package.json
-          sed -i 's/rule-901@[^"]*"/'"$RULE_NAME"'@'"${ruleVersion}"'"/g' rule-executer-$RULE_NAME/package.json
+          # Update rule dependency - change both namespace and version
+          sed -i 's|"rule": "npm:@tazama-lf/rule-901@[^"]*"|"rule": "npm:@psl-copilot/'"$RULE_NAME"'@'"${ruleVersion}"'"|g' rule-executer-$RULE_NAME/package.json
           sed -i "s/901/$RULE_NAME/" rule-executer-$RULE_NAME/Dockerfile
           echo "Successfully modified rule-executer-$RULE_NAME files."
       # Verify Changes in modified files
