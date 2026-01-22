@@ -106,6 +106,8 @@ jobs:
           export NPM_CONFIG_USERCONFIG="$HOME/.npmrc"
           cd rule-executer-$RULE_NAME
           npm install --ignore-scripts --package-lock-only
+        env:
+          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }
 
       # Step 6: Build Docker Image and Deploy Container Locally
       - name: Build Docker Image and Deploy Container Locally
