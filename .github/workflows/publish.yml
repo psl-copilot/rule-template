@@ -1,90 +1,89 @@
-# SPDX-License-Identifier: Apache-2.0
+  # SPDX-License-Identifier: Apache-2.0
 
-name: Build and Publish Package
+  name: Build and Publish Package
 
-on:
-  push:
-    branches:
-      - dev
-  workflow_dispatch:
+  on:
+    push:
+      branches:
+        - dev
+    workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
+  permissions:
+    contents: read
+    packages: write
 
-jobs:
-  publish:
-    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
-    runs-on: ubuntu-latest
+  jobs:
+    publish:
+      if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
+      runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: npm
+        - name: Setup Node.js 20
+          uses: actions/setup-node@v4
+          with:
+            node-version: 20.x
+            cache: npm
 
-      - name: Check for rule file
-        id: check_rule
-        run: |
-          if [ -f "src/rule.ts" ]; then
-            echo "has_rule=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_rule=false" >> $GITHUB_OUTPUT
-            echo "⚠️ No src/rule.ts found - skipping publish"
-          fi
+        - name: Check for rule file
+          id: check_rule
+          run: |
+            if [ -f "src/rule.ts" ]; then
+              echo "has_rule=true" >> $GITHUB_OUTPUT
+            else
+              echo "has_rule=false" >> $GITHUB_OUTPUT
+              echo "⚠️ No src/rule.ts found - skipping publish"
+            fi
 
-      # 🔐 AUTHENTICATE BOTH ORG SCOPES (CRITICAL)
-      - name: Configure npm authentication
-        if: steps.check_rule.outputs.has_rule == 'true'
-        run: |
-          echo "@psl-copilot:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          echo "@tazama-lf:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> ~/.npmrc
-        env:
-          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
+        # 🔐 AUTHENTICATE BOTH ORG SCOPES (CRITICAL)
+        - name: Configure npm authentication
+          if: steps.check_rule.outputs.has_rule == 'true'
+          run: |
+            echo "@psl-copilot:registry=https://npm.pkg.github.com" >> ~/.npmrc
+            echo "@tazama-lf:registry=https://npm.pkg.github.com" >> ~/.npmrc
+            echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> ~/.npmrc
+          env:
+            GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
-      - name: Auto-increment version
-        if: steps.check_rule.outputs.has_rule == 'true'
-        run: |
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          PACKAGE_NAME=$(node -p "require('./package.json').name")
+        - name: Auto-increment version
+          if: steps.check_rule.outputs.has_rule == 'true'
+          run: |
+            CURRENT_VERSION=$(node -p "require('./package.json').version")
+            PACKAGE_NAME=$(node -p "require('./package.json').name")
 
-          PUBLISHED_VERSION=$(npm view $PACKAGE_NAME version \
-            --registry=https://npm.pkg.github.com 2>/dev/null || echo "none")
+            PUBLISHED_VERSION=$(npm view $PACKAGE_NAME version \
+              --registry=https://npm.pkg.github.com 2>/dev/null || echo "none")
 
-          if [ "$PUBLISHED_VERSION" = "$CURRENT_VERSION" ]; then
-            npm version patch --no-git-tag-version
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
+            if [ "$PUBLISHED_VERSION" = "$CURRENT_VERSION" ]; then
+              npm version patch --no-git-tag-version
+            fi
+          env:
+            GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
-      - name: Install dependencies
-        if: steps.check_rule.outputs.has_rule == 'true'
-        run: npm ci
-        env:
-          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
+        - name: Install dependencies
+          if: steps.check_rule.outputs.has_rule == 'true'
+          run: npm ci
+          env:
+            GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
-      - name: Build package
-        if: steps.check_rule.outputs.has_rule == 'true'
-        run: npm run build
+        - name: Build package
+          if: steps.check_rule.outputs.has_rule == 'true'
+          run: npm run build
 
-      - name: Update package.json scope
-        if: steps.check_rule.outputs.has_rule == 'true'
-        run: |
-          sed -i 's/@tazama-lf/@psl-copilot/' package.json
-          sed -i 's/@tazama-lf:registry/@psl-copilot:registry/' package.json
+        - name: Update package.json package name only
+          if: steps.check_rule.outputs.has_rule == 'true'
+          run: |
+            sed -i 's|"name": "@tazama-lf/|"name": "@psl-copilot/|' package.json
 
-      - name: Publish to GitHub Packages
-        if: steps.check_rule.outputs.has_rule == 'true'
-        run: npm publish --registry=https://npm.pkg.github.com --access public
-        env:
-          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
+        - name: Publish to GitHub Packages
+          if: steps.check_rule.outputs.has_rule == 'true'
+          run: npm publish --registry=https://npm.pkg.github.com --access public
+          env:
+            GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
-      - name: Summary
-        if: steps.check_rule.outputs.has_rule == 'true'
-        run: |
-          echo "✅ Published $(node -p "require('./package.json').name")@$(node -p "require('./package.json').version")"
+        - name: Summary
+          if: steps.check_rule.outputs.has_rule == 'true'
+          run: |
+            echo "✅ Published $(node -p "require('./package.json').name")@$(node -p "require('./package.json').version")"
