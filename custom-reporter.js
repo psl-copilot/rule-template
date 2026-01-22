@@ -178,15 +178,19 @@ class TazamaHtmlReporter {
       const self = this;
       files.forEach(function (filePath) {
         const file = coverageData[filePath];
-        const fileName = path.basename(filePath);
+        // Extract only the filename from the full path
+        const fileName = filePath.split('\\').pop().split('/').pop();
 
         // Get actual uncovered lines from detailed coverage
         const uncoveredText = self.getUncoveredLines(detailedCoverage, filePath);
 
+        // Add red bold styling if there are uncovered lines
+        const fileNameDisplay = uncoveredText ? '<span style="color: #E74C3C; font-weight: 700;">' + fileName + '</span>' : fileName;
+
         fileRowsHTML +=
           '<tr class="file-row">' +
           '<td class="cell-file">&nbsp;' +
-          fileName +
+          fileNameDisplay +
           '</td>' +
           '<td class="cell-pct ' +
           self.getCoverageClass(file.statements.pct) +
