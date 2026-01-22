@@ -82,6 +82,18 @@ jobs:
         run: |
           cat rule-executer-$RULE_NAME/package.json
           cat rule-executer-$RULE_NAME/Dockerfile
+      
+      # Configure npm for GitHub Packages
+      - name: Configure npm for GitHub Packages
+        run: |
+          echo "Configuring npm to use GitHub Packages for @psl-copilot scope..."
+          cd rule-executer-$RULE_NAME
+          echo "@psl-copilot:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> .npmrc
+          echo "npm configuration complete."
+        env:
+          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
+      
       # Step 5: Build Rule Packages
       - name: Build Rule Packages
         run: |
