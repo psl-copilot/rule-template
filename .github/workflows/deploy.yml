@@ -73,6 +73,11 @@ jobs:
           # Update rule dependency - change both namespace and version
           sed -i 's|"rule": "npm:@tazama-lf/rule-901@[^"]*"|"rule": "npm:@psl-copilot/'"$RULE_NAME"'@'"${ruleVersion}"'"|g' rule-executer-$RULE_NAME/package.json
           sed -i "s/901/$RULE_NAME/" rule-executer-$RULE_NAME/Dockerfile
+          
+          # Add ARG and npmrc configuration to Dockerfile
+          sed -i '/^FROM node/a ARG GH_TOKEN' rule-executer-$RULE_NAME/Dockerfile
+          sed -i '/^RUN npm ci/i RUN echo "@tazama-lf:registry=https://npm.pkg.github.com" > /root/.npmrc && \\\n    echo "@psl-copilot:registry=https://npm.pkg.github.com" >> /root/.npmrc && \\\n    echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> /root/.npmrc' rule-executer-$RULE_NAME/Dockerfile
+          
           echo "Successfully modified rule-executer-$RULE_NAME files."
       # Verify Changes in modified files
       - name: Verify Changes
