@@ -101,18 +101,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
-      # # Step 5: Build Rule Packages
-      # - name: Build Rule Packages
-      #   run: |
-      #     export NPM_CONFIG_USERCONFIG="$HOME/.npmrc"
-      #     echo "Building rule packages..."
-      #     cd rule-executer-$RULE_NAME
-      #     rm -rf package-lock.json
-      #     npm install
-      #     echo "Rule packages built."
-
-        env:
-          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
       # Step 6: Build Docker Image and Deploy Container Locally
       - name: Build Docker Image and Deploy Container Locally
         run: |
