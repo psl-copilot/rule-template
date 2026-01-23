@@ -19,7 +19,6 @@ class TazamaHtmlReporter {
     if (value === undefined || value === null || isNaN(value)) {
       return 'Unknown';
     }
-    // Handle string "Unknown" from coverage data
     if (typeof value === 'string') {
       return value;
     }
@@ -34,14 +33,12 @@ class TazamaHtmlReporter {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    // Save test results to a temp file for post-processing
     const tempResultsPath = path.join(process.cwd(), 'coverage', 'test-results.json');
     const tempResultsDir = path.dirname(tempResultsPath);
     if (!fs.existsSync(tempResultsDir)) {
       fs.mkdirSync(tempResultsDir, { recursive: true });
     }
 
-    // Save just the essential test results
     const essentialResults = {
       numTotalTests: results.numTotalTests,
       numPassedTests: results.numPassedTests,
@@ -60,14 +57,12 @@ class TazamaHtmlReporter {
     };
 
     fs.writeFileSync(tempResultsPath, JSON.stringify(essentialResults, null, 2));
-    console.log('\n⏳ Test results saved. Coverage report will be generated after Jest finishes writing coverage files...');
+    console.log('\nTest results saved. Coverage report will be generated after Jest finishes writing coverage files...');
   }
 
-  // Extract uncovered line numbers from detailed coverage
   getUncoveredLines(detailedCoverage, filePath) {
     if (!detailedCoverage) return '';
 
-    // Find matching file in detailed coverage
     const fileKey = Object.keys(detailedCoverage).find(function (key) {
       return key.includes(path.basename(filePath)) || filePath.includes(path.basename(key));
     });
@@ -81,7 +76,6 @@ class TazamaHtmlReporter {
     const statementMap = fileData.statementMap;
     const statementCoverage = fileData.s;
 
-    // Find statements with 0 coverage
     Object.keys(statementCoverage).forEach(function (stmtId) {
       if (statementCoverage[stmtId] === 0) {
         const stmt = statementMap[stmtId];
@@ -96,7 +90,6 @@ class TazamaHtmlReporter {
 
     if (uncoveredLines.length === 0) return '';
 
-    // Sort and format as ranges (e.g., "45-46, 52, 60-62")
     uncoveredLines.sort(function (a, b) {
       return a - b;
     });
@@ -131,7 +124,6 @@ class TazamaHtmlReporter {
     const duration = ((Date.now() - startTime) / 1000).toFixed(3);
     const timestamp = new Date().toLocaleString();
 
-    // Build test cards HTML
     let testCardsHTML = '';
     testResults.forEach(function (testResult) {
       testResult.testResults.forEach(function (test) {
@@ -156,9 +148,8 @@ class TazamaHtmlReporter {
       });
     });
 
-    // Build coverage table HTML
     let coverageTableHTML =
-      '<div class="coverage-section"><h2>📊 Code Coverage</h2><p style="color:#666;">No coverage data available.</p></div>';
+      '<div class="coverage-section"><h2>Code Coverage</h2><p style="color:#666;">No coverage data available.</p></div>';
 
     if (coverageData && coverageData.total) {
       const total = coverageData.total;
@@ -170,13 +161,10 @@ class TazamaHtmlReporter {
       const self = this;
       files.forEach(function (filePath) {
         const file = coverageData[filePath];
-        // Extract only the filename from the full path
         const fileName = filePath.split('\\').pop().split('/').pop();
 
-        // Get actual uncovered lines from detailed coverage
         const uncoveredText = self.getUncoveredLines(detailedCoverage, filePath);
 
-        // Add red bold styling if there are uncovered lines
         const fileNameDisplay = uncoveredText ? '<span style="color: #E74C3C; font-weight: 700;">' + fileName + '</span>' : fileName;
 
         fileRowsHTML +=
@@ -212,7 +200,7 @@ class TazamaHtmlReporter {
 
       coverageTableHTML =
         '<div class="coverage-section">' +
-        '<h2>📊 Code Coverage</h2>' +
+        '<h2>Code Coverage</h2>' +
         '<div class="coverage-table-container">' +
         '<table class="coverage-table">' +
         '<thead><tr>' +
@@ -284,7 +272,7 @@ class TazamaHtmlReporter {
         '</div></div>';
     }
 
-    const failedSubtitle = numFailedTests > 0 ? '❌ Needs attention' : '🎉 All passed!';
+    const failedSubtitle = numFailedTests > 0 ? 'Needs attention' : 'All passed!';
 
     return (
       '<!DOCTYPE html>' +
@@ -534,7 +522,7 @@ class TazamaHtmlReporter {
       '          <div class="card-value">' +
       numPassedTests +
       '</div>' +
-      '          <div class="card-subtitle">✅ Successful</div>' +
+      '          <div class="card-subtitle">Successful</div>' +
       '        </div>' +
       '        <div class="card failed">' +
       '          <div class="card-title">Failed</div>' +
@@ -550,12 +538,12 @@ class TazamaHtmlReporter {
       '          <div class="card-value">' +
       duration +
       '<span style="font-size: 18px;">s</span></div>' +
-      '          <div class="card-subtitle">⏱️ Execution time</div>' +
+      '          <div class="card-subtitle">Execution time</div>' +
       '        </div>' +
       '      </div>' +
       coverageTableHTML +
       '      <div class="test-section">' +
-      '        <h2>📋 Test Execution Details</h2>' +
+      '        <h2>Test Execution Details</h2>' +
       '        <div class="test-cards-grid">' +
       testCardsHTML +
       '        </div>' +
