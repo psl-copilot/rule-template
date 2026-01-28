@@ -58,6 +58,12 @@ jobs:
       # Step 4: Update the version in package.json and rule number in Dockerfile
       # - name: Install jq
       #   run: dnf install -y jq
+      - name: Normalize rule name
+        run: |
+          RULE_ID="${RULE_NAME#rule-}"
+          echo "RULE_ID=$RULE_ID" >> $GITHUB_ENV
+          echo "Normalized RULE_ID=$RULE_ID"
+
       
       - name: Modify Rule Executer Files
         run: |
@@ -72,7 +78,7 @@ jobs:
           
           # Update rule dependency - change both namespace and version
           sed -i 's|"rule": "npm:@tazama-lf/rule-901@[^"]*"|"rule": "npm:@psl-copilot/'"$RULE_NAME"'@'"${ruleVersion}"'"|g' rule-executer-$RULE_NAME/package.json
-          sed -i "s/901/$RULE_NAME/" rule-executer-$RULE_NAME/Dockerfile
+          sed -i "s/901/$RULE_ID/" rule-executer-$RULE_NAME/Dockerfile
           
           # Modify Dockerfile to accept GH_TOKEN and configure npm before npm ci
           # Add ARG right after FROM statement
