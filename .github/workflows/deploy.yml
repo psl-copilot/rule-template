@@ -64,12 +64,12 @@ jobs:
           echo "RULE_ID=$RULE_ID" >> $GITHUB_ENV
           echo "Normalized RULE_ID=$RULE_ID"
 
-      
       - name: Modify Rule Executer Files
         run: |
           echo "Modifying rule-executer-$RULE_NAME files..."
           # Extract ruleVersion from current repo's package.json
           ruleVersion=$(jq -r '.version' package.json)
+          echo "RULE_VERSION=$ruleVersion" >> $GITHUB_ENV
           if [ -z "$ruleVersion" ] || [ "$ruleVersion" = "null" ]; then
             echo "❌ Error: Could not fetch ruleVersion from package.json"
             exit 1
@@ -127,7 +127,7 @@ jobs:
           docker rm $RULE_NAME || true
           
           echo "Deploying container on local server..."
-          docker run -d --name $RULE_NAME --restart unless-stopped psl-copilot/$RULE_NAME:latest
+          docker run -d --name $RULE_NAME -e RULE_NAME=$RULE_ID -e RULE_VERSION=$RULE_VERSION --restart unless-stopped psl-copilot/$RULE_NAME:latest
           echo "Container deployed successfully."
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
