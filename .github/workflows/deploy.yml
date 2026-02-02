@@ -3,16 +3,12 @@
 name: Rule Executer - Rule processor Automation
 
 on:
-  push:
-    branches:
-      - dev
   workflow_dispatch:
   workflow_run:
     workflows: ["Build and Publish Package"]
     types:
       - completed
-    branches:
-      - dev
+
 jobs:
   automate-rule-executer:
     if: |
