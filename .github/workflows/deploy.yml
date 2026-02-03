@@ -63,26 +63,13 @@ jobs:
       - name: Modify Rule Executer Files
         run: |
           echo "Modifying rule-executer-$RULE_NAME files..."
-          # Extract ruleVersion from current repo's package.json
-          ruleVersion=$(jq -r '.version' package.json)
-          echo "RULE_VERSION=$ruleVersion" >> $GITHUB_ENV
-          if [ -z "$ruleVersion" ] || [ "$ruleVersion" = "null" ]; then
-            echo "❌ Error: Could not fetch ruleVersion from package.json"
-            exit 1
-          fi
-          echo "Fetched ruleVersion from package.json: $ruleVersion"
-          
-          # Update rule dependency - change both namespace and version
-          sed -i 's|"rule": "npm:@tazama-lf/rule-901@[^"]*"|"rule": "npm:@psl-copilot/'"$RULE_NAME"'@'"${ruleVersion}"'"|g' rule-executer-$RULE_NAME/package.json
-          sed -i "s/901/$RULE_ID/" rule-executer-$RULE_NAME/Dockerfile
-          
+          # Update rule dependency to use @latest
+          sed -i 's|"rule": "npm:@psl-copilot/rule-placeholder@latest"|"rule": "npm:@psl-copilot/'"$RULE_NAME"'@latest"|g' rule-executer-$RULE_NAME/package.json
+          # Update rule number in Dockerfile
+          sed -i "s/placeholder/$RULE_ID/" rule-executer-$RULE_NAME/Dockerfile
           # Modify Dockerfile to accept GH_TOKEN and configure npm before npm ci
-          # Add ARG right after FROM statement
           sed -i '/^FROM node/a\ARG GH_TOKEN' rule-executer-$RULE_NAME/Dockerfile
-          
-          # Add RUN command to create .npmrc before npm ci runs
           sed -i '/^RUN npm ci/i\RUN echo "@tazama-lf:registry=https://npm.pkg.github.com" > /root/.npmrc && \\\n    echo "@psl-copilot:registry=https://npm.pkg.github.com" >> /root/.npmrc && \\\n    echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> /root/.npmrc\n' rule-executer-$RULE_NAME/Dockerfile
-          
           echo "Successfully modified rule-executer-$RULE_NAME files."
       # Verify Changes in modified files
       - name: Verify Changes
@@ -108,6 +95,15 @@ jobs:
           export NPM_CONFIG_USERCONFIG="$HOME/.npmrc"
           cd rule-executer-$RULE_NAME
           npm install --ignore-scripts --package-lock-only
+        env:
+          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
+
+      - name: Install Latest Rule Version
+        run: |
+          cd rule-executer-$RULE_NAME
+          npm pkg delete dependencies.rule
+          npm install --save-exact rule@npm:@psl-copilot/$RULE_NAME@latest --ignore-scripts
+          echo "✅ Installed: $(npm list rule --depth=0)"
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
