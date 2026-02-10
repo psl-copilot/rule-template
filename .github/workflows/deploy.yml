@@ -127,7 +127,37 @@ jobs:
           docker rm $RULE_NAME || true
           
           echo "Deploying container on local server..."
-          docker run -d --name $RULE_NAME -e RULE_NAME=$RULE_ID -e RULE_VERSION=$RULE_VERSION --restart unless-stopped psl-copilot/$RULE_NAME:latest
+          docker run -d --name $RULE_NAME \
+          -e RULE_NAME=$RULE_ID \
+          -e RULE_VERSION=$RULE_VERSION \
+          -e RAW_HISTORY_DATABASE=raw_history \
+          -e RAW_HISTORY_DATABASE_HOST=10.10.80.37 \
+          -e RAW_HISTORY_DATABASE_PORT=5432 \
+          -e RAW_HISTORY_DATABASE_USER=postgres \
+          -e RAW_HISTORY_DATABASE_PASSWORD=postgres \
+          -e RAW_HISTORY_DATABASE_CERT_PATH=/usr/local/share/ca-certificates/ca-certificates.crt \
+          -e CONFIGURATION_DATABASE=configuration \
+          -e CONFIGURATION_DATABASE_HOST=10.10.80.37 \
+          -e CONFIGURATION_DATABASE_PORT=5432 \
+          -e CONFIGURATION_DATABASE_USER=postgres \
+          -e CONFIGURATION_DATABASE_PASSWORD=postgres \
+          -e CONFIGURATION_DATABASE_CERT_PATH=/usr/local/share/ca-certificates/ca-certificates.crt \
+          -e EVENT_HISTORY_DATABASE=event_history \
+          -e EVENT_HISTORY_DATABASE_HOST=10.10.80.37 \
+          -e EVENT_HISTORY_DATABASE_PORT=5432 \
+          -e EVENT_HISTORY_DATABASE_USER=postgres \
+          -e EVENT_HISTORY_DATABASE_PASSWORD=postgres \
+          -e EVENT_HISTORY_DATABASE_CERT_PATH=/usr/local/share/ca-certificates/ca-certificates.crt \
+          -e STARTUP_TYPE=nats \
+          -e SERVER_URL=10.10.80.37:14222 \
+          -e PRODUCER_STREAM= \
+          -e CONSUMER_STREAM= \
+          -e STREAM_SUBJECT= \
+          -e ACK_POLICY=Explicit \
+          -e PRODUCER_STORAGE=File \
+          -e PRODUCER_RETENTION_POLICY=Workqueue \
+          --restart unless-stopped psl-copilot/$RULE_NAME:latest
+          
           echo "Container deployed successfully."
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
