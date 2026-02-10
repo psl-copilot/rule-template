@@ -287,7 +287,3 @@ jobs:
           echo "Container deployed successfully."
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
-
-          echo "Container deployed successfully."
-        env:
-          GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
