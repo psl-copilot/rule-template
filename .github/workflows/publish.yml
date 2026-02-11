@@ -16,6 +16,8 @@
     publish:
       if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
       runs-on: ubuntu-latest
+      env:
+        ORG: ${{ github.repository_owner }}
 
       steps:
         - name: Checkout Repository
@@ -41,7 +43,7 @@
         - name: Configure npm authentication
           if: steps.check_rule.outputs.has_rule == 'true'
           run: |
-            echo "@psl-copilot:registry=https://npm.pkg.github.com" >> ~/.npmrc
+            echo "@${ORG}:registry=https://npm.pkg.github.com" >> ~/.npmrc
             echo "@tazama-lf:registry=https://npm.pkg.github.com" >> ~/.npmrc
             echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> ~/.npmrc
           env:
@@ -72,10 +74,11 @@
           if: steps.check_rule.outputs.has_rule == 'true'
           run: npm run build
 
-        - name: Update package.json package name only
+        - name: Update package.json package metadata
           if: steps.check_rule.outputs.has_rule == 'true'
           run: |
-            sed -i 's|"name": "@tazama-lf/|"name": "@psl-copilot/|' package.json
+            sed -E -i 's|"name": "@[^/]+/|"name": "@'"$ORG"'/|' package.json
+            sed -E -i 's|"@[^\"]+:registry"|"@'"$ORG"':registry"|' package.json
 
         - name: Publish to GitHub Packages
           if: steps.check_rule.outputs.has_rule == 'true'

@@ -19,6 +19,7 @@ jobs:
     - tazama-dev
     env:
       RULE_NAME: ${{ github.event.repository.name }}
+      ORG: ${{ github.repository_owner }}
 
     steps:
       # Step 1: Checkout repository
@@ -35,7 +36,7 @@ jobs:
       - name: Clone Rule Executer Repo
         run: |
           echo "Cloning Rule Executer repo and removing package-lock.json file..."
-          git clone https://github.com/tazama-lf/rule-executer -b feat-paysys
+          git clone https://github.com/${ORG}/rule-executer -b feat-paysys
           cd rule-executer 
           rm -f package-lock.json
           cd ..
@@ -62,14 +63,14 @@ jobs:
         run: |
           echo "Modifying rule-executer-$RULE_NAME files..."
           # Update rule dependency to use @latest
-          sed -i 's|"rule": "npm:@psl-copilot/rule-placeholder@latest"|"rule": "npm:@psl-copilot/'"$RULE_NAME"'@latest"|g' rule-executer-$RULE_NAME/package.json
+          sed -E -i 's|"rule": "npm:@[^/]+/rule-placeholder@latest"|"rule": "npm:@'"$ORG"'/'"$RULE_NAME"'@latest"|g' rule-executer-$RULE_NAME/package.json
 
           # Update rule number in Dockerfile
           sed -i "s/placeholder/$RULE_ID/" rule-executer-$RULE_NAME/Dockerfile
 
           # Modify Dockerfile to accept GH_TOKEN and configure npm before npm ci
           sed -i '/^FROM node/a\ARG GH_TOKEN' rule-executer-$RULE_NAME/Dockerfile
-          sed -i '/^RUN npm ci/i\RUN echo "@tazama-lf:registry=https://npm.pkg.github.com" > /root/.npmrc && \\\n    echo "@psl-copilot:registry=https://npm.pkg.github.com" >> /root/.npmrc && \\\n    echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> /root/.npmrc\n' rule-executer-$RULE_NAME/Dockerfile
+          sed -i '/^RUN npm ci/i\RUN echo "@tazama-lf:registry=https://npm.pkg.github.com" > /root/.npmrc && \\\n+    echo "@'"$ORG"':registry=https://npm.pkg.github.com" >> /root/.npmrc && \\\n+    echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> /root/.npmrc\n' rule-executer-$RULE_NAME/Dockerfile
           echo "Successfully modified rule-executer-$RULE_NAME files."
           
       # Verify Changes in modified files
@@ -82,8 +83,8 @@ jobs:
       - name: Configure npm for GitHub Packages
         run: |
           export NPMRC_PATH="$HOME/.npmrc"
-          echo "@tazama-lf:registry=https://npm.pkg.github.com" >  "$NPMRC_PATH"
-          echo "@psl-copilot:registry=https://npm.pkg.github.com" >> "$NPMRC_PATH"
+          echo "@tazama-lf:registry=https://npm.pkg.github.com" >>  "$NPMRC_PATH"
+          echo "@$ORG:registry=https://npm.pkg.github.com" >> "$NPMRC_PATH"
           echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> "$NPMRC_PATH"
 
           echo "=== ACTIVE npmrc ==="
@@ -103,7 +104,7 @@ jobs:
         run: |
           cd rule-executer-$RULE_NAME
           npm pkg delete dependencies.rule
-          npm install --save-exact rule@npm:@psl-copilot/$RULE_NAME@latest --ignore-scripts
+          npm install --save-exact rule@npm:@$ORG/$RULE_NAME@latest --ignore-scripts
           echo "✅ Installed: $(npm list rule --depth=0)"
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
@@ -119,7 +120,7 @@ jobs:
       - name: Build Docker Image and Deploy Container Locally
         run: |
           echo "Building Docker image locally on self-hosted runner..."
-          docker build --build-arg GH_TOKEN=${GH_TOKEN} -t psl-copilot/$RULE_NAME:latest rule-executer-$RULE_NAME
+          docker build --build-arg GH_TOKEN=${GH_TOKEN} -t $ORG/$RULE_NAME:latest rule-executer-$RULE_NAME
           echo "Docker Image build complete."
           
           echo "Stopping and removing existing container if running..."
@@ -156,7 +157,7 @@ jobs:
           -e ACK_POLICY=Explicit \
           -e PRODUCER_STORAGE=File \
           -e PRODUCER_RETENTION_POLICY=Workqueue \
-          --restart unless-stopped psl-copilot/$RULE_NAME:latest
+          --restart unless-stopped $ORG/$RULE_NAME:latest
           
           echo "Container deployed successfully."
         env:
