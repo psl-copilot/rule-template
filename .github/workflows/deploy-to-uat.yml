@@ -14,7 +14,7 @@ jobs:
       github.actor != 'dependabot-preview[bot]' &&
       (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on:
-    - tazama-dev
+    - tazama-uat
     env:
       RULE_NAME: ${{ github.event.repository.name }}
 
