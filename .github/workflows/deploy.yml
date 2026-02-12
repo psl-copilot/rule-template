@@ -70,10 +70,10 @@ jobs:
           sed -i '/^FROM node/a\ARG GH_TOKEN' rule-executer-$RULE_NAME/Dockerfile
 
           # Replace RUN npm ci with npm auth + npm ci
-          sed -i 's|^[[:space:]]*RUN npm ci|RUN echo "@tazama-lf:registry=https://npm.pkg.github.com" > /root/.npmrc \&\& \
-            echo "@'"$ORG"':registry=https://npm.pkg.github.com" >> /root/.npmrc \&\& \
-            echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> /root/.npmrc \&\& \
-            npm ci|' rule-executer-$RULE_NAME/Dockerfile
+          sed -i 's|^[[:space:]]*RUN npm ci.*|RUN echo "@tazama-lf:registry=https://npm.pkg.github.com" > /root/.npmrc \&\& \\ \
+            echo "@'"$ORG"':registry=https://npm.pkg.github.com" >> /root/.npmrc \&\& \\ \
+            echo "//npm.pkg.github.com/:_authToken=${GH_TOKEN}" >> /root/.npmrc \&\& \\ \
+            npm ci --ignore-scripts|' rule-executer-$RULE_NAME/Dockerfile
 
           echo "Successfully modified rule-executer-$RULE_NAME files."
 
