@@ -36,7 +36,7 @@ jobs:
       - name: Clone Rule Executer Repo
         run: |
           echo "Cloning Rule Executer repo and removing package-lock.json file..."
-          git clone https://github.com/${ORG}/rule-executer -b feat-paysys
+          git clone https://github.com/tazama-lf/rule-executer -b feat-paysys
           cd rule-executer 
           rm -f package-lock.json
           cd ..
