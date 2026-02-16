@@ -50,7 +50,7 @@ jobs:
         if: steps.check_tests.outputs.has_tests == 'true'
         run: npm run test:coverage
         continue-on-error: true
-        
+
       - name: Upload unit test report artifact
         if: always() && steps.check_tests.outputs.has_tests == 'true'
         uses: actions/upload-artifact@v4
@@ -67,10 +67,14 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          [ -f reports/unit-tests/latest/index.html ] && git add reports/unit-tests/latest/index.html
-          [ -d coverage/html ] && git add coverage/html
+          if [ -f reports/unit-tests/latest/index.html ]; then
+            git add reports/unit-tests/latest/index.html
+          fi
 
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
 
-          git commit -m "ci: update unit test HTML report and coverage (run ${{ github.run_number }})"
+          git commit -m "ci: update unit test HTML report (run ${{ github.run_number }})"
           git push
