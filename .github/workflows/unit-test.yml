@@ -67,6 +67,8 @@ jobs:
 
       - name: Commit latest HTML test report to repo
         if: always() && steps.check_tests.outputs.has_tests == 'true'
+        env:
+          HUSKY: 0
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
