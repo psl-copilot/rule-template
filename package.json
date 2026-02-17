@@ -25,7 +25,8 @@
     "prepare": "husky",
     "test": "npm run clean:coverage && jest --config=jest.config.ts --passWithNoTests --runInBand && node generate-report.js",
     "test:watch": "jest --config=jest.config.ts --watch",
-    "test:coverage": "npm run clean:coverage && jest --config=jest.config.ts --coverage --passWithNoTests --runInBand && node generate-report.js",
+    "test:coverage": "npm run clean:coverage && jest --config=jest.config.ts --coverage --passWithNoTests --runInBand",
+    "generate:report": "node generate-report.js",
     "coverage": "npm run test:coverage && echo 'Coverage report generated in ./coverage/lcov-report/index.html'"
   },
   "license": "Apache-2.0",
