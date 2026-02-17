@@ -78,3 +78,11 @@ jobs:
 
           git commit -m "ci: update unit test HTML report (run ${{ github.run_number }})"
           git push
+
+      - name: Debug generated files
+        if: always()
+        run: |
+          echo "Reports folder:"
+          ls -R reports || echo "No reports folder"
+          echo "Coverage folder:"
+          ls -R coverage || echo "No coverage folder"
