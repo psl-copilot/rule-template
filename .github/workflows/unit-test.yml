@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 20 (GitHub Packages)
         uses: actions/setup-node@v4
@@ -83,7 +85,8 @@ jobs:
           fi
 
           git commit -m "ci: update unit test HTML report (run ${{ github.run_number }})"
-          git push
+          git pull --rebase origin staging
+          git push origin staging
 
       - name: Debug generated files
         if: always()
