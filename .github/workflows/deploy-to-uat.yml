@@ -127,7 +127,7 @@ jobs:
           echo "Deploying container on local server..."
           docker run -d --name $RULE_NAME \
           -e RULE_NAME=$RULE_ID \
-          -e RULE_VERSION=$RULE_VERSION \
+          -e RULE_VERSION=1.0.0 \
           -e RAW_HISTORY_DATABASE=raw_history \
           -e RAW_HISTORY_DATABASE_HOST=10.10.80.37 \
           -e RAW_HISTORY_DATABASE_PORT=5432 \
