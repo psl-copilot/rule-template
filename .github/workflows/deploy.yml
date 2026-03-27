@@ -161,6 +161,9 @@ jobs:
           -e ACK_POLICY=Explicit \
           -e PRODUCER_STORAGE=File \
           -e PRODUCER_RETENTION_POLICY=Workqueue \
+          -e REDIS_HOST="10.10.80.37" \
+          -e REDIS_PORT="6379" \
+          -e REDIS_PASSWORD="redis-password" \
           --restart unless-stopped $ORG/$RULE_NAME:latest
           
           echo "Container deployed successfully."
