@@ -164,6 +164,7 @@ jobs:
           -e REDIS_HOST="10.10.80.37" \
           -e REDIS_PORT="6379" \
           -e REDIS_PASSWORD="redis-password" \
+          -e REDIS_AUTH= \
           --restart unless-stopped $ORG/$RULE_NAME:latest
           
           echo "Container deployed successfully."
