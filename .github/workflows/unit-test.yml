@@ -2,11 +2,11 @@ name: Unit Tests
 
 on:
   push:
-    branches: [staging]
+    branches: [main]
     paths-ignore:
       - 'reports/**'
   pull_request:
-    branches: [staging]
+    branches: [main]
 
 permissions:
   contents: write
@@ -75,9 +75,9 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
       
-          git checkout staging
-          git fetch origin staging
-          git reset --hard origin/staging
+          git checkout main
+          git fetch origin main
+          git reset --hard origin/main
       
           if [ -f reports/unit-tests/latest/index.html ]; then
             git add reports/unit-tests/latest/index.html
@@ -90,7 +90,7 @@ jobs:
       
           git commit -m "ci: update unit test HTML report (run ${{ github.run_number }})"
       
-          git push origin HEAD:staging --force
+          git push origin HEAD:main --force
 
       - name: Debug generated files
         if: always()
