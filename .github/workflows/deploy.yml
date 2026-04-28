@@ -16,7 +16,7 @@ jobs:
       github.actor != 'dependabot-preview[bot]' &&
       (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on:
-    - tazama-dev
+    - tazama-uat
     env:
       RULE_NAME: ${{ github.event.repository.name }}
       ORG: ${{ github.repository_owner }}
@@ -136,32 +136,32 @@ jobs:
           -e RULE_NAME=$RULE_ID \
           -e RULE_VERSION=1.0.0 \
           -e RAW_HISTORY_DATABASE=raw_history \
-          -e RAW_HISTORY_DATABASE_HOST=10.10.80.37 \
-          -e RAW_HISTORY_DATABASE_PORT=5432 \
+          -e RAW_HISTORY_DATABASE_HOST=10.10.80.34 \
+          -e RAW_HISTORY_DATABASE_PORT=15432 \
           -e RAW_HISTORY_DATABASE_USER=postgres \
-          -e RAW_HISTORY_DATABASE_PASSWORD=postgres \
+          -e RAW_HISTORY_DATABASE_PASSWORD=unused \
           -e RAW_HISTORY_DATABASE_CERT_PATH=/usr/local/share/ca-certificates/ca-certificates.crt \
           -e CONFIGURATION_DATABASE=configuration \
-          -e CONFIGURATION_DATABASE_HOST=10.10.80.37 \
-          -e CONFIGURATION_DATABASE_PORT=5432 \
+          -e CONFIGURATION_DATABASE_HOST=10.10.80.34 \
+          -e CONFIGURATION_DATABASE_PORT=15432 \
           -e CONFIGURATION_DATABASE_USER=postgres \
-          -e CONFIGURATION_DATABASE_PASSWORD=postgres \
+          -e CONFIGURATION_DATABASE_PASSWORD=unused \
           -e CONFIGURATION_DATABASE_CERT_PATH=/usr/local/share/ca-certificates/ca-certificates.crt \
           -e EVENT_HISTORY_DATABASE=event_history \
-          -e EVENT_HISTORY_DATABASE_HOST=10.10.80.37 \
-          -e EVENT_HISTORY_DATABASE_PORT=5432 \
+          -e EVENT_HISTORY_DATABASE_HOST=10.10.80.34 \
+          -e EVENT_HISTORY_DATABASE_PORT=15432 \
           -e EVENT_HISTORY_DATABASE_USER=postgres \
-          -e EVENT_HISTORY_DATABASE_PASSWORD=postgres \
+          -e EVENT_HISTORY_DATABASE_PASSWORD=unused \
           -e EVENT_HISTORY_DATABASE_CERT_PATH=/usr/local/share/ca-certificates/ca-certificates.crt \
           -e STARTUP_TYPE=nats \
-          -e SERVER_URL=10.10.80.37:14222 \
+          -e SERVER_URL=10.10.80.34:14222 \
           -e PRODUCER_STREAM= \
           -e CONSUMER_STREAM= \
           -e STREAM_SUBJECT= \
           -e ACK_POLICY=Explicit \
           -e PRODUCER_STORAGE=File \
           -e PRODUCER_RETENTION_POLICY=Workqueue \
-          -e REDIS_HOST="10.10.80.37" \
+          -e REDIS_HOST="10.10.80.34" \
           -e REDIS_PORT="6379" \
           -e REDIS_PASSWORD="redis-password" \
           -e REDIS_AUTH= \
