@@ -20,6 +20,8 @@ jobs:
     env:
       RULE_NAME: ${{ github.event.repository.name }}
       ORG: ${{ github.repository_owner }}
+      # Docker Hub org namespace — repos will be created as pslcopilot/<rule-name>
+      DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_NAMESPACE }}
 
     steps:
       # Step 1: Checkout repository
@@ -127,32 +129,36 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Step 6: Create Docker Hub repository at runtime (idempotent — safe to re-run)
-      # Repo name format: <DOCKERHUB_USERNAME>/<RULE_NAME>  e.g. sohaib1083/rule-001
+      # Repo name format: pslcopilot/<RULE_NAME>  e.g. pslcopilot/rule-001
       - name: Create Docker Hub Repository
         run: |
-          DOCKERHUB_REPO="${{ secrets.DOCKERHUB_USERNAME }}/${RULE_NAME}"
+          DOCKERHUB_REPO="${DOCKERHUB_NAMESPACE}/${RULE_NAME}"
           echo "DOCKERHUB_REPO=${DOCKERHUB_REPO}" >> $GITHUB_ENV
 
           echo "Checking / creating Docker Hub repository: ${DOCKERHUB_REPO}..."
 
-          # Get a short-lived JWT from Docker Hub using username + token
+          # Get a short-lived JWT — login is with personal username, namespace is the org
           HUB_JWT=$(curl -s -X POST "https://hub.docker.com/v2/users/login" \
-            -H "Content-Type: application/json" \
-            -d '{"username":"${{ secrets.DOCKERHUB_USERNAME }}","password":"${{ secrets.DOCKERHUB_TOKEN }}"}' \
-            | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).token" 2>/dev/null || \
-            curl -s -X POST "https://hub.docker.com/v2/users/login" \
             -H "Content-Type: application/json" \
             -d "{\"username\":\"${{ secrets.DOCKERHUB_USERNAME }}\",\"password\":\"${{ secrets.DOCKERHUB_TOKEN }}\"}" \
             | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
 
-          # Create the repo — returns 201 if created, 409 if already exists (both are fine)
+          if [ -z "$HUB_JWT" ]; then
+            echo "❌ Failed to authenticate with Docker Hub — check DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets"
+            exit 1
+          fi
+
+          echo "✅ Docker Hub login successful"
+
+          # Create the repo under the org namespace
+          # 201 = created, 409 = already exists — both are fine
           HTTP_STATUS=$(curl -s -o /tmp/hub_response.json -w "%{http_code}" \
             -X POST "https://hub.docker.com/v2/repositories/" \
             -H "Authorization: Bearer ${HUB_JWT}" \
             -H "Content-Type: application/json" \
             -d "{
               \"name\": \"${RULE_NAME}\",
-              \"namespace\": \"${{ secrets.DOCKERHUB_USERNAME }}\",
+              \"namespace\": \"${DOCKERHUB_NAMESPACE}\",
               \"description\": \"Rule executer image for ${RULE_NAME}\",
               \"is_private\": true
             }")
