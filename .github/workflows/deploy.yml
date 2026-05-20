@@ -20,8 +20,6 @@ jobs:
     env:
       RULE_NAME: ${{ github.event.repository.name }}
       ORG: ${{ github.repository_owner }}
-      # Docker Hub fixed repo — set DOCKERHUB_REPO secret to e.g. "myorg/rule-executers"
-      DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_REPO }}
 
     steps:
       # Step 1: Checkout repository
@@ -128,11 +126,53 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Step 6: Build and push Docker image to Docker Hub
+      # Step 6: Create Docker Hub repository at runtime (idempotent — safe to re-run)
+      # Repo name format: <DOCKERHUB_USERNAME>/<RULE_NAME>  e.g. sohaib1083/rule-001
+      - name: Create Docker Hub Repository
+        run: |
+          DOCKERHUB_REPO="${{ secrets.DOCKERHUB_USERNAME }}/${RULE_NAME}"
+          echo "DOCKERHUB_REPO=${DOCKERHUB_REPO}" >> $GITHUB_ENV
+
+          echo "Checking / creating Docker Hub repository: ${DOCKERHUB_REPO}..."
+
+          # Get a short-lived JWT from Docker Hub using username + token
+          HUB_JWT=$(curl -s -X POST "https://hub.docker.com/v2/users/login" \
+            -H "Content-Type: application/json" \
+            -d '{"username":"${{ secrets.DOCKERHUB_USERNAME }}","password":"${{ secrets.DOCKERHUB_TOKEN }}"}' \
+            | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).token" 2>/dev/null || \
+            curl -s -X POST "https://hub.docker.com/v2/users/login" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\":\"${{ secrets.DOCKERHUB_USERNAME }}\",\"password\":\"${{ secrets.DOCKERHUB_TOKEN }}\"}" \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+          # Create the repo — returns 201 if created, 409 if already exists (both are fine)
+          HTTP_STATUS=$(curl -s -o /tmp/hub_response.json -w "%{http_code}" \
+            -X POST "https://hub.docker.com/v2/repositories/" \
+            -H "Authorization: Bearer ${HUB_JWT}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"name\": \"${RULE_NAME}\",
+              \"namespace\": \"${{ secrets.DOCKERHUB_USERNAME }}\",
+              \"description\": \"Rule executer image for ${RULE_NAME}\",
+              \"is_private\": true
+            }")
+
+          cat /tmp/hub_response.json
+
+          if [ "$HTTP_STATUS" = "201" ]; then
+            echo "✅ Docker Hub repository created: ${DOCKERHUB_REPO}"
+          elif [ "$HTTP_STATUS" = "409" ]; then
+            echo "✅ Docker Hub repository already exists: ${DOCKERHUB_REPO}"
+          else
+            echo "❌ Unexpected status ${HTTP_STATUS} when creating repository"
+            exit 1
+          fi
+
+      # Step 7: Build and push Docker image to Docker Hub
       - name: Build and Push Docker Image to Docker Hub
         run: |
-          IMAGE_TAG_VERSIONED="${DOCKERHUB_REPO}:${RULE_NAME}-${RULE_VERSION}"
-          IMAGE_TAG_LATEST="${DOCKERHUB_REPO}:${RULE_NAME}-latest"
+          IMAGE_TAG_VERSIONED="${DOCKERHUB_REPO}:${RULE_VERSION}"
+          IMAGE_TAG_LATEST="${DOCKERHUB_REPO}:latest"
 
           echo "Building Docker image..."
           docker build \
@@ -147,15 +187,13 @@ jobs:
           echo "Pushing ${IMAGE_TAG_LATEST}..."
           docker push "${IMAGE_TAG_LATEST}"
 
-          # Save the versioned tag for use in deploy step
-          echo "IMAGE_TAG_VERSIONED=${IMAGE_TAG_VERSIONED}" >> $GITHUB_ENV
           echo "IMAGE_TAG_LATEST=${IMAGE_TAG_LATEST}" >> $GITHUB_ENV
 
           echo "✅ Docker image pushed to Docker Hub."
         env:
           GH_TOKEN: ${{ secrets.TAZAMA_TOKEN }}
 
-      # Step 7: Pull from Docker Hub and Deploy Container on self-hosted runner
+      # Step 8: Pull from Docker Hub and Deploy Container on self-hosted runner
       - name: Pull and Deploy Container from Docker Hub
         run: |
           echo "Pulling latest image from Docker Hub..."
