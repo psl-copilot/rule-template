@@ -167,7 +167,7 @@ jobs:
 
           if [ "$HTTP_STATUS" = "201" ]; then
             echo "✅ Docker Hub repository created: ${DOCKERHUB_REPO}"
-          elif [ "$HTTP_STATUS" = "409" ]; then
+          elif [ "$HTTP_STATUS" = "409" ] || [ "$HTTP_STATUS" = "400" ]; then
             echo "✅ Docker Hub repository already exists: ${DOCKERHUB_REPO}"
           else
             echo "❌ Unexpected status ${HTTP_STATUS} when creating repository"
