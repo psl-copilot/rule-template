@@ -160,7 +160,7 @@ jobs:
               \"name\": \"${RULE_NAME}\",
               \"namespace\": \"${DOCKERHUB_NAMESPACE}\",
               \"description\": \"Rule executer image for ${RULE_NAME}\",
-              \"is_private\": true
+              \"is_private\": false
             }")
 
           cat /tmp/hub_response.json
