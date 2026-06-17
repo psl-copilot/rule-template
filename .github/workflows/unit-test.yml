@@ -2,11 +2,11 @@ name: Unit Tests
 
 on:
   push:
-    branches: [main]
+    branches: [staging]
     paths-ignore:
       - 'reports/**'
   pull_request:
-    branches: [main]
+    branches: [staging]
 
 permissions:
   contents: write
@@ -85,8 +85,8 @@ jobs:
           fi
 
           git commit -m "ci: update unit test HTML report (run ${{ github.run_number }})"
-          git pull --rebase origin main
-          git push origin main
+          git pull --rebase origin staging
+          git push origin staging
 
       - name: Debug generated files
         if: always()
